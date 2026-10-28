@@ -1851,6 +1851,7 @@ export default function App() {
   const [analysisDone, setAnalysisDone] = useState(false)
   const [complianceScore, setComplianceScore] = useState(null)
   const [evaluatedRulesCount, setEvaluatedRulesCount] = useState(0)
+  const [copiedSuggested, setCopiedSuggested] = useState(false)
 
   // Sign-Off Gate state for current review
   const [signOffStatus, setSignOffStatus] = useState('NOT STARTED')
@@ -2365,6 +2366,48 @@ export default function App() {
       setComplianceScore((prev) => Math.min(100, (prev || 50) + 15))
       triggerToast(`Applied smart rewrite for ${issue.id} · Text updated!`)
     }
+  }
+
+  // Calculate full suggested compliant text by applying all rewrites
+  const getFullCompliantDraft = (originalDraft, issuesList) => {
+    let cleaned = originalDraft || ''
+    if (!issuesList || issuesList.length === 0) return cleaned
+    issuesList.forEach((iss) => {
+      if (iss.quote && iss.rewrite && cleaned.includes(iss.quote)) {
+        cleaned = cleaned.replace(iss.quote, iss.rewrite)
+      }
+    })
+    return cleaned
+  }
+
+  // Copy full compliant text to clipboard
+  const handleCopySuggestedContent = (textToCopy) => {
+    if (!textToCopy) return
+    navigator.clipboard.writeText(textToCopy)
+    setCopiedSuggested(true)
+    triggerToast('Suggested Compliant Copy copied to clipboard!')
+    setTimeout(() => setCopiedSuggested(false), 2500)
+  }
+
+  // Apply all compliant rewrites in 1 click
+  const handleApplyAllRewrites = () => {
+    const activeDraft = activeNav === 'New review' ? marketingDraft : currentReview.draft
+    let updatedText = activeDraft || ''
+    issues.forEach((iss) => {
+      if (iss.quote && iss.rewrite && updatedText.includes(iss.quote)) {
+        updatedText = updatedText.replace(iss.quote, iss.rewrite)
+      }
+    })
+    if (activeNav === 'New review') {
+      setMarketingDraft(updatedText)
+    }
+    setCurrentReview((prev) => ({
+      ...prev,
+      draft: updatedText
+    }))
+    setIssues(issues.map((i) => ({ ...i, state: 'resolved' })))
+    setComplianceScore(100)
+    triggerToast('All AI Compliant rewrites applied successfully!')
   }
 
   // Human Sign-Off Gate Approval (Admin & Brand Manager authorized)
@@ -4415,56 +4458,222 @@ export default function App() {
                         />
                       </div>
 
-                      <div className="finding-list">
-                        {issues.map((issue) => {
+                      <div className="finding-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        {issues.map((issue, idx) => {
                           const isResolved = issue.state === 'resolved'
+                          const isSelected = selectedIssue === issue.id
                           return (
                             <div
                               key={issue.id}
-                              className={`finding-card ${selectedIssue === issue.id ? 'selected' : ''} ${
-                                isResolved ? 'resolved' : ''
-                              }`}
+                              style={{
+                                background: '#0e181f',
+                                border: isSelected
+                                  ? '1px solid #38bdf8'
+                                  : isResolved
+                                  ? '1px solid #164e3f'
+                                  : '1px solid #1f303a',
+                                borderRadius: '10px',
+                                padding: '16px',
+                                boxShadow: isSelected
+                                  ? '0 0 16px rgba(56, 189, 248, 0.15)'
+                                  : 'none',
+                                transition: 'all 0.2s ease',
+                                cursor: 'pointer'
+                              }}
                               onClick={() => setSelectedIssue(issue.id)}
                             >
-                              <div className={`severity-icon ${issue.severity.toLowerCase()}`}>
-                                {isResolved ? (
-                                  <Icon name="check" size={14} />
-                                ) : (
-                                  '!'
-                                )}
+                              {/* Header: Rule Title & VIOLATION / RESOLVED badge */}
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  marginBottom: '14px'
+                                }}
+                              >
+                                <h4
+                                  style={{
+                                    margin: 0,
+                                    fontSize: '13.5px',
+                                    fontWeight: '700',
+                                    color: '#f8fafc',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px'
+                                  }}
+                                >
+                                  Rule {idx + 1} – {issue.title || issue.type || `Brand Policy Violation`}
+                                </h4>
+                                <span
+                                  style={{
+                                    fontSize: '9.5px',
+                                    fontWeight: '800',
+                                    letterSpacing: '0.8px',
+                                    padding: '3px 9px',
+                                    borderRadius: '4px',
+                                    background: isResolved
+                                      ? 'rgba(34, 197, 94, 0.14)'
+                                      : 'rgba(239, 68, 68, 0.14)',
+                                    color: isResolved ? '#4ade80' : '#f87171',
+                                    border: `1px solid ${
+                                      isResolved
+                                        ? 'rgba(34, 197, 94, 0.35)'
+                                        : 'rgba(239, 68, 68, 0.35)'
+                                    }`,
+                                    textTransform: 'uppercase'
+                                  }}
+                                >
+                                  {isResolved ? 'RESOLVED' : 'VIOLATION'}
+                                </span>
                               </div>
 
-                              <div className="finding-copy">
-                                <div className="finding-top">
-                                  <span>
-                                    {issue.id} · {issue.type}
-                                  </span>
-                                  <span className={`severity-label ${issue.severity.toLowerCase()}`}>
-                                    {isResolved ? 'Resolved' : issue.severity}
-                                  </span>
-                                </div>
-
-                                <strong>“{issue.quote}”</strong>
-                                <p>{issue.explanation}</p>
-
-                                {issue.rewrite && !isResolved && (
-                                  <div
+                              {/* Row 1: FOUND IN AD (if quote exists) */}
+                              {issue.quote && (
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    gap: '12px',
+                                    marginBottom: '12px'
+                                  }}
+                                >
+                                  <span
                                     style={{
-                                      marginTop: '8px',
-                                      paddingTop: '8px',
-                                      borderTop: '1px solid #1f303a',
-                                      display: 'flex',
-                                      flexDirection: 'column',
-                                      gap: '6px'
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '5px',
+                                      fontSize: '9px',
+                                      fontWeight: '800',
+                                      letterSpacing: '0.5px',
+                                      padding: '3px 8px',
+                                      borderRadius: '4px',
+                                      background: 'rgba(239, 68, 68, 0.12)',
+                                      color: '#f87171',
+                                      border: '1px solid rgba(239, 68, 68, 0.25)',
+                                      whiteSpace: 'nowrap',
+                                      flexShrink: 0
                                     }}
                                   >
-                                    <small style={{ color: 'var(--mint)', fontSize: '9px', lineHeight: '1.4' }}>
-                                      ✦ Smart Compliant Rewrite: “{issue.rewrite}”
-                                    </small>
+                                    🔍 FOUND IN AD
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontFamily:
+                                        'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                                      fontSize: '11.5px',
+                                      fontWeight: '600',
+                                      color: '#fb7185',
+                                      background: 'rgba(251, 113, 133, 0.08)',
+                                      padding: '2px 8px',
+                                      borderRadius: '4px',
+                                      border: '1px solid rgba(251, 113, 133, 0.2)',
+                                      wordBreak: 'break-word'
+                                    }}
+                                  >
+                                    "{issue.quote}"
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Row 2: WHY WRONG */}
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'flex-start',
+                                  gap: '12px',
+                                  marginBottom: '12px'
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    fontSize: '9px',
+                                    fontWeight: '800',
+                                    letterSpacing: '0.5px',
+                                    padding: '3px 8px',
+                                    borderRadius: '4px',
+                                    background: 'rgba(245, 158, 11, 0.12)',
+                                    color: '#fbbf24',
+                                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                                    whiteSpace: 'nowrap',
+                                    flexShrink: 0
+                                  }}
+                                >
+                                  ⚠️ WHY WRONG
+                                </span>
+                                <p
+                                  style={{
+                                    margin: 0,
+                                    fontSize: '12px',
+                                    lineHeight: '1.55',
+                                    color: '#cbd5e1'
+                                  }}
+                                >
+                                  {issue.explanation}
+                                </p>
+                              </div>
+
+                              {/* Row 3: COMPLIANT FIX */}
+                              {(issue.rewrite || issue.fix) && (
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    flexWrap: 'wrap'
+                                  }}
+                                >
+                                  <span
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '5px',
+                                      fontSize: '9px',
+                                      fontWeight: '800',
+                                      letterSpacing: '0.5px',
+                                      padding: '3px 8px',
+                                      borderRadius: '4px',
+                                      background: 'rgba(16, 185, 129, 0.12)',
+                                      color: '#34d399',
+                                      border: '1px solid rgba(16, 185, 129, 0.25)',
+                                      whiteSpace: 'nowrap',
+                                      flexShrink: 0
+                                    }}
+                                  >
+                                    💡 COMPLIANT FIX
+                                  </span>
+                                  <span
+                                    style={{
+                                      fontSize: '12px',
+                                      lineHeight: '1.55',
+                                      color: '#34d399',
+                                      fontWeight: '500',
+                                      flex: 1,
+                                      minWidth: '180px'
+                                    }}
+                                  >
+                                    {issue.fix || issue.rewrite}
+                                  </span>
+                                  {!isResolved && (
                                     <button
                                       type="button"
-                                      className="primary-button"
-                                      style={{ padding: '4px 10px', fontSize: '10px', alignSelf: 'flex-start' }}
+                                      style={{
+                                        padding: '5px 12px',
+                                        fontSize: '10.5px',
+                                        fontWeight: '700',
+                                        background:
+                                          'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                        color: '#ffffff',
+                                        border: 'none',
+                                        borderRadius: '5px',
+                                        cursor: 'pointer',
+                                        boxShadow:
+                                          '0 2px 6px rgba(16, 185, 129, 0.3)',
+                                        marginLeft: 'auto',
+                                        alignSelf: 'center'
+                                      }}
                                       onClick={(e) => {
                                         e.stopPropagation()
                                         handleApplyRewrite(issue)
@@ -4472,13 +4681,129 @@ export default function App() {
                                     >
                                       Accept rewrite
                                     </button>
-                                  </div>
-                                )}
-                              </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )
                         })}
                       </div>
+
+                      {/* SUGGESTED COMPLIANT COPY Card (Image 1 bottom) */}
+                      {issues.length > 0 && (
+                        <div
+                          style={{
+                            marginTop: '20px',
+                            background: '#091319',
+                            border: '1px solid #1f303a',
+                            borderLeft: '4px solid #10b981',
+                            borderRadius: '8px',
+                            padding: '16px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '12px'
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <strong
+                              style={{
+                                fontSize: '11px',
+                                fontWeight: '800',
+                                letterSpacing: '0.8px',
+                                color: '#34d399',
+                                textTransform: 'uppercase'
+                              }}
+                            >
+                              SUGGESTED COMPLIANT COPY
+                            </strong>
+                            <span
+                              style={{
+                                fontSize: '9.5px',
+                                color: '#64748b',
+                                fontWeight: '600'
+                              }}
+                            >
+                              Auto-sanitized by Akira AI
+                            </span>
+                          </div>
+
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: '12.5px',
+                              lineHeight: '1.65',
+                              color: '#e2e8f0'
+                            }}
+                          >
+                            {getFullCompliantDraft(marketingDraft, issues)}
+                          </p>
+
+                          <div
+                            style={{
+                              display: 'flex',
+                              gap: '10px',
+                              flexWrap: 'wrap',
+                              marginTop: '4px'
+                            }}
+                          >
+                            <button
+                              type="button"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                background: '#16232b',
+                                border: '1px solid #2e4554',
+                                color: '#f1f5f9',
+                                padding: '7px 14px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.15s'
+                              }}
+                              onClick={() =>
+                                handleCopySuggestedContent(
+                                  getFullCompliantDraft(marketingDraft, issues)
+                                )
+                              }
+                            >
+                              📋{' '}
+                              {copiedSuggested
+                                ? 'Copied to Clipboard!'
+                                : 'Copy Suggested Content'}
+                            </button>
+
+                            {issues.some((i) => i.state !== 'resolved') && (
+                              <button
+                                type="button"
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  background: 'rgba(16, 185, 129, 0.15)',
+                                  border: '1px solid rgba(16, 185, 129, 0.4)',
+                                  color: '#34d399',
+                                  padding: '7px 14px',
+                                  borderRadius: '6px',
+                                  fontSize: '11px',
+                                  fontWeight: '700',
+                                  cursor: 'pointer'
+                                }}
+                                onClick={handleApplyAllRewrites}
+                              >
+                                ⚡ Apply All Compliant Fixes
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -5350,57 +5675,222 @@ export default function App() {
                   </button>
                 </div>
 
-                <div className="finding-list">
-                  {issues.map((issue) => {
+                <div className="finding-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {issues.map((issue, idx) => {
                     const isSelected = selectedIssue === issue.id
                     const isResolved = issue.state === 'resolved'
                     return (
                       <div
                         key={issue.id}
-                        className={`finding-card ${isSelected ? 'selected' : ''} ${isResolved ? 'resolved' : ''}`}
+                        style={{
+                          background: '#0e181f',
+                          border: isSelected
+                            ? '1px solid #38bdf8'
+                            : isResolved
+                            ? '1px solid #164e3f'
+                            : '1px solid #1f303a',
+                          borderRadius: '10px',
+                          padding: '16px',
+                          boxShadow: isSelected
+                            ? '0 0 16px rgba(56, 189, 248, 0.15)'
+                            : 'none',
+                          transition: 'all 0.2s ease',
+                          cursor: 'pointer'
+                        }}
                         onClick={() => setSelectedIssue(issue.id)}
                       >
-                        <div className={`severity-icon ${issue.severity.toLowerCase()}`}>
-                          {isResolved ? (
-                            <Icon name="check" size={14} />
-                          ) : issue.severity === 'High' ? (
-                            '!'
-                          ) : issue.severity === 'Medium' ? (
-                            '!'
-                          ) : (
-                            'i'
-                          )}
+                        {/* Header: Rule Title & VIOLATION / RESOLVED badge */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            marginBottom: '14px'
+                          }}
+                        >
+                          <h4
+                            style={{
+                              margin: 0,
+                              fontSize: '13.5px',
+                              fontWeight: '700',
+                              color: '#f8fafc',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '6px'
+                            }}
+                          >
+                            Rule {idx + 1} – {issue.title || issue.type || `Brand Policy Violation`}
+                          </h4>
+                          <span
+                            style={{
+                              fontSize: '9.5px',
+                              fontWeight: '800',
+                              letterSpacing: '0.8px',
+                              padding: '3px 9px',
+                              borderRadius: '4px',
+                              background: isResolved
+                                ? 'rgba(34, 197, 94, 0.14)'
+                                : 'rgba(239, 68, 68, 0.14)',
+                              color: isResolved ? '#4ade80' : '#f87171',
+                              border: `1px solid ${
+                                isResolved
+                                  ? 'rgba(34, 197, 94, 0.35)'
+                                  : 'rgba(239, 68, 68, 0.35)'
+                              }`,
+                              textTransform: 'uppercase'
+                            }}
+                          >
+                            {isResolved ? 'RESOLVED' : 'VIOLATION'}
+                          </span>
                         </div>
-                        <div className="finding-copy">
-                          <div className="finding-top">
-                            <span>
-                              {issue.id} · {issue.type}
-                            </span>
-                            <span className={`severity-label ${issue.severity.toLowerCase()}`}>
-                              {isResolved ? 'Resolved' : issue.severity}
-                            </span>
-                          </div>
-                          <strong>“{issue.quote}”</strong>
-                          <p>{issue.explanation}</p>
 
-                          {issue.rewrite && !isResolved && (
-                            <div
+                        {/* Row 1: FOUND IN AD (if quote exists) */}
+                        {issue.quote && (
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: '12px',
+                              marginBottom: '12px'
+                            }}
+                          >
+                            <span
                               style={{
-                                marginTop: '9px',
-                                paddingTop: '8px',
-                                borderTop: '1px solid #1f303a',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '6px'
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                fontSize: '9px',
+                                fontWeight: '800',
+                                letterSpacing: '0.5px',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                background: 'rgba(239, 68, 68, 0.12)',
+                                color: '#f87171',
+                                border: '1px solid rgba(239, 68, 68, 0.25)',
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0
                               }}
                             >
-                              <small style={{ color: 'var(--mint)', fontSize: '9px', lineHeight: '1.4' }}>
-                                ✦ Smart Rewrite: “{issue.rewrite}”
-                              </small>
+                              🔍 FOUND IN AD
+                            </span>
+                            <span
+                              style={{
+                                fontFamily:
+                                  'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                                fontSize: '11.5px',
+                                fontWeight: '600',
+                                color: '#fb7185',
+                                background: 'rgba(251, 113, 133, 0.08)',
+                                padding: '2px 8px',
+                                borderRadius: '4px',
+                                border: '1px solid rgba(251, 113, 133, 0.2)',
+                                wordBreak: 'break-word'
+                              }}
+                            >
+                              "{issue.quote}"
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Row 2: WHY WRONG */}
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '12px',
+                            marginBottom: '12px'
+                          }}
+                        >
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '5px',
+                              fontSize: '9px',
+                              fontWeight: '800',
+                              letterSpacing: '0.5px',
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              background: 'rgba(245, 158, 11, 0.12)',
+                              color: '#fbbf24',
+                              border: '1px solid rgba(245, 158, 11, 0.25)',
+                              whiteSpace: 'nowrap',
+                              flexShrink: 0
+                            }}
+                          >
+                            ⚠️ WHY WRONG
+                          </span>
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: '12px',
+                              lineHeight: '1.55',
+                              color: '#cbd5e1'
+                            }}
+                          >
+                            {issue.explanation}
+                          </p>
+                        </div>
+
+                        {/* Row 3: COMPLIANT FIX */}
+                        {(issue.rewrite || issue.fix) && (
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              flexWrap: 'wrap'
+                            }}
+                          >
+                            <span
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                fontSize: '9px',
+                                fontWeight: '800',
+                                letterSpacing: '0.5px',
+                                padding: '3px 8px',
+                                borderRadius: '4px',
+                                background: 'rgba(16, 185, 129, 0.12)',
+                                color: '#34d399',
+                                border: '1px solid rgba(16, 185, 129, 0.25)',
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0
+                              }}
+                            >
+                              💡 COMPLIANT FIX
+                            </span>
+                            <span
+                              style={{
+                                fontSize: '12px',
+                                lineHeight: '1.55',
+                                color: '#34d399',
+                                fontWeight: '500',
+                                flex: 1,
+                                minWidth: '180px'
+                              }}
+                            >
+                              {issue.fix || issue.rewrite}
+                            </span>
+                            {!isResolved && (
                               <button
                                 type="button"
-                                className="primary-button"
-                                style={{ padding: '5px 11px', fontSize: '10px', alignSelf: 'flex-start' }}
+                                style={{
+                                  padding: '5px 12px',
+                                  fontSize: '10.5px',
+                                  fontWeight: '700',
+                                  background:
+                                    'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                  color: '#ffffff',
+                                  border: 'none',
+                                  borderRadius: '5px',
+                                  cursor: 'pointer',
+                                  boxShadow:
+                                    '0 2px 6px rgba(16, 185, 129, 0.3)',
+                                  marginLeft: 'auto',
+                                  alignSelf: 'center'
+                                }}
                                 onClick={(e) => {
                                   e.stopPropagation()
                                   handleApplyRewrite(issue)
@@ -5408,14 +5898,129 @@ export default function App() {
                               >
                                 Accept rewrite
                               </button>
-                            </div>
-                          )}
-                        </div>
-                        <Icon name="arrow" size={16} />
+                            )}
+                          </div>
+                        )}
                       </div>
                     )
                   })}
                 </div>
+
+                {/* SUGGESTED COMPLIANT COPY Card (Image 1 bottom) */}
+                {issues.length > 0 && (
+                  <div
+                    style={{
+                      marginTop: '20px',
+                      background: '#091319',
+                      border: '1px solid #1f303a',
+                      borderLeft: '4px solid #10b981',
+                      borderRadius: '8px',
+                      padding: '16px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px'
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <strong
+                        style={{
+                          fontSize: '11px',
+                          fontWeight: '800',
+                          letterSpacing: '0.8px',
+                          color: '#34d399',
+                          textTransform: 'uppercase'
+                        }}
+                      >
+                        SUGGESTED COMPLIANT COPY
+                      </strong>
+                      <span
+                        style={{
+                          fontSize: '9.5px',
+                          color: '#64748b',
+                          fontWeight: '600'
+                        }}
+                      >
+                        Auto-sanitized by Akira AI
+                      </span>
+                    </div>
+
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '12.5px',
+                        lineHeight: '1.65',
+                        color: '#e2e8f0'
+                      }}
+                    >
+                      {getFullCompliantDraft(currentReview.draft, issues)}
+                    </p>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '10px',
+                        flexWrap: 'wrap',
+                        marginTop: '4px'
+                      }}
+                    >
+                      <button
+                        type="button"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          background: '#16232b',
+                          border: '1px solid #2e4554',
+                          color: '#f1f5f9',
+                          padding: '7px 14px',
+                          borderRadius: '6px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.15s'
+                        }}
+                        onClick={() =>
+                          handleCopySuggestedContent(
+                            getFullCompliantDraft(currentReview.draft, issues)
+                          )
+                        }
+                      >
+                        📋{' '}
+                        {copiedSuggested
+                          ? 'Copied to Clipboard!'
+                          : 'Copy Suggested Content'}
+                      </button>
+
+                      {issues.some((i) => i.state !== 'resolved') && (
+                        <button
+                          type="button"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            background: 'rgba(16, 185, 129, 0.15)',
+                            border: '1px solid rgba(16, 185, 129, 0.4)',
+                            color: '#34d399',
+                            padding: '7px 14px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            cursor: 'pointer'
+                          }}
+                          onClick={handleApplyAllRewrites}
+                        >
+                          ⚡ Apply All Compliant Fixes
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div className="verification-note">
                   <div>
