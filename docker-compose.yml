@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  # ── PostgreSQL Database Container (Port 5432) ──
+  db:
+    image: postgres:15-alpine
+    container_name: brandguard_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword2026
+      POSTGRES_DB: brandguard_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ── FastAPI Backend API Container (Port 8000) ──
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: brandguard_backend
+    restart: always
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword2026@db:5432/brandguard_db
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - INKLOOM_API_KEY=${INKLOOM_API_KEY:-}
+      - JWT_SECRET_KEY=brandguard-autonomous-governance-secret-key-2026
+      - PORT=8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── React + Vite Frontend Container (Port 5173) ──
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: brandguard_frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BrandGuard • Akira AI Interactive Walkthrough Video</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #081117;
+      color: #edf4f5;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .header {
+      text-align: center;
+      max-width: 900px;
+      margin-bottom: 25px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(186, 245, 127, 0.15);
+      border: 1px solid #baf57f;
+      color: #baf57f;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.6px;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    h1 { font-size: 28px; font-weight: 800; color: #edf4f5; margin-bottom: 6px; }
+    p.sub { font-size: 14px; color: #829ca9; line-height: 1.5; }
+    .video-container {
+      width: min(1000px, 95vw);
+      background: #0d171f;
+      border: 1.5px solid #233b49;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+    }
+    video {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: #000;
+    }
+    .steps-grid {
+      width: min(1000px, 95vw);
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 25px;
+    }
+    .step-card {
+      background: #11212c;
+      border: 1px solid #203644;
+      border-radius: 10px;
+      padding: 14px;
+    }
+    .step-num {
+      width: 24px;
+      height: 24px;
+      border-radius: 6px;
+      background: rgba(186, 245, 127, 0.2);
+      color: #baf57f;
+      font-size: 12px;
+      font-weight: 800;
+      display: grid;
+      place-items: center;
+      margin-bottom: 8px;
+    }
+    .step-card strong { font-size: 13px; color: #edf4f5; display: block; margin-bottom: 4px; }
+    .step-card p { font-size: 11px; color: #829ca9; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="badge">CODEX 48 • Official Product Walkthrough</div>
+    <h1>How Akira AI Works (From Draft to Cryptographic Seal)</h1>
+    <p class="sub">Watch how BrandGuard scans marketing copy, verifies verbatim evidence, replaces violations with 1-click rewrites, and certifies human sign-off.</p>
+  </div>
+
+  <div class="video-container">
+    <video controls autoplay muted loop>
+      <source src="/BrandGuard_Akira_AI_Demo_Video.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <strong>Content Ingestion</strong>
+      <p>Creator inputs CarePlus Diwali draft with unverified medical guarantees and zero fees.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <strong>Dual-Engine Scan</strong>
+      <p>Deterministic Python regex + Google Gemini contextual LLM analyze text in under 2 seconds.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <strong>Evidence Verifier</strong>
+      <p>Anti-hallucination guardrail links verbatim quoted evidence to stored Rule IDs (R1, R2, R4).</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <strong>1-Click Smart Rewrite</strong>
+      <p>Creator clicks 'Accept rewrite'; text updates live in editor and score jumps from 40 to 100.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">5</div>
+      <strong>Visual CIELAB & WCAG Gate</strong>
+      <p>Brand Manager audits color distance (&Delta;E*) and WCAG AA contrast on banner graphics.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">6</div>
+      <strong>Cryptographic Seal</strong>
+      <p>Manager approves; immutable SHA-256 seal logged permanently to the audit ledger.</p>
+    </div>
+  </div>
+</body>
+</html>
