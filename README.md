@@ -46,6 +46,12 @@ BrandGuard does not simply produce raw text suggestions; it operates as an **Aut
 
 ```
 BrandGuard-AI/
+├── frontend/                        # React 19 + Vite Frontend SPA
+│   ├── src/                         # Components, ReviewStudio, Analytics, Modals
+│   ├── public/                      # Static assets & interactive demo player
+│   ├── package.json                 # Frontend dependencies & scripts
+│   ├── vite.config.js               # Vite bundler configuration
+│   └── vercel.json                  # SPA routing configuration
 ├── backend/                         # FastAPI Python Backend
 │   ├── app/
 │   │   ├── database/                # SQLite connection & session
@@ -55,19 +61,10 @@ BrandGuard-AI/
 │   │   └── schemas/                 # Pydantic validation schemas
 │   ├── requirements.txt             # Python dependencies
 │   └── run.py                       # FastAPI entrypoint
-├── src/                             # React 19 Frontend
-│   ├── components/                  # Navbar, Modals, ReviewStudio, Analytics
-│   ├── data/                        # CarePlus demo datasets & fallback mock engine
-│   ├── services/                    # Axios API client with offline auto-failover
-│   ├── App.jsx                      # Main Governance Dashboard
-│   └── main.jsx                     # Vite root entry
-├── public/
-│   └── akira_ai_demo.html           # Interactive Walkthrough Player
 ├── BrandGuard_Round2_Submission_Report.pdf  # Comprehensive 9-page Hackathon Submission PDF
 ├── BrandGuard_Akira_AI_Demo_Video.mp4       # 35-second HD Akira AI feature demonstration
-├── vercel.json                      # Vercel SPA routing & deployment config
-├── vite.config.js                   # Vite bundler configuration
-└── package.json                     # NPM dependencies & scripts
+├── vercel.json                      # Root Vercel zero-config pipeline
+└── docker-compose.yml               # Unified container orchestrator
 ```
 
 ---
@@ -76,6 +73,7 @@ BrandGuard-AI/
 
 ### 1. Frontend (React 19 + Vite)
 ```bash
+cd frontend
 npm install
 npm run dev
 ```
@@ -98,7 +96,7 @@ Backend API interactive Swagger docs run at **`http://localhost:8000/docs`**.
 BrandGuard is pre-configured for **1-click zero-latency deployment** on Vercel:
 1. Push this repository to GitHub.
 2. Link the repository in [Vercel](https://vercel.com/new).
-3. The included `vercel.json` automatically configures single-page routing (`/index.html`).
+3. The included `vercel.json` automatically builds the `frontend/` package and configures single-page routing (`/index.html`).
 4. Instant global edge delivery with <0.5s cold-start response time for judges.
 
 ---
