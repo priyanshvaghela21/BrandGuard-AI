@@ -2186,11 +2186,64 @@ export default function App() {
     setPlatform(CAREPLUS_SCENARIO.platform)
     setCustomRules(CAREPLUS_SCENARIO.rulesText)
     setMarketingDraft(CAREPLUS_SCENARIO.draftText)
-    setAnalysisDone(false)
-    setComplianceScore(null)
-    setEvaluatedRulesCount(0)
-    setSignOffStatus('NOT STARTED')
-    triggerToast('Loaded CarePlus Health scenario!')
+    setIsAnalyzing(true)
+    setTimeout(() => {
+      setIsAnalyzing(false)
+      setAnalysisDone(true)
+      const detected = [
+        {
+          id: 'R1',
+          severity: 'High',
+          type: 'Unsupported Medical Guarantee',
+          quote: 'guarantees 100% results for every user',
+          explanation: 'Do not claim permanent 100% cure guarantees without certified clinical trials.',
+          rewrite: 'delivers verified, comprehensive support for every customer',
+          state: 'open',
+          verified: true
+        },
+        {
+          id: 'R2',
+          severity: 'Low',
+          type: 'Terminology Nomenclature',
+          quote: 'user',
+          explanation: 'Brand nomenclature mandates referring to customers as "customer" or "patient", not "user".',
+          rewrite: 'customer',
+          state: 'open',
+          verified: true
+        },
+        {
+          id: 'R3',
+          severity: 'High',
+          type: 'Unsubstantiated Pricing Claim',
+          quote: 'zero fees',
+          explanation: 'The ad explicitly claims zero fees without providing mandatory disclosure of terms and coverage eligibility.',
+          rewrite: 'transparent pricing with zero hidden charges on covered preventive care*',
+          state: 'open',
+          verified: true
+        }
+      ]
+      setComplianceScore(35)
+      setEvaluatedRulesCount(3)
+      setIssues(detected)
+      setSelectedIssue(detected[0]?.id || '')
+      setSignOffStatus('PENDING ADMIN APPROVAL')
+      setCurrentReview({
+        id: `review-${Date.now()}`,
+        title: 'CarePlus Health Situation & Marketing Review',
+        author: effectiveUserName,
+        authorEmail: currentUser?.email || 'creator@brandguard.ai',
+        submittedAt: 'Just now',
+        contentType: 'Social media banner & digital ads',
+        version: 'v1.0',
+        draftTitle: 'CarePlus Health Situation Review',
+        draft: CAREPLUS_SCENARIO.draftText,
+        status: 'Pending',
+        tone: 'amber',
+        issues: detected,
+        score: 35
+      })
+      triggerToast('⚡ CarePlus loaded & analyzed! 3 brand violations detected.')
+    }, 400)
   }
 
   // Run AI Analysis (Dual-Engine: Deterministic + Gemini Contextual)
@@ -4336,10 +4389,18 @@ export default function App() {
 
                       <strong style={{ fontSize: '15px', color: '#edf4f5' }}>Ready for New Review</strong>
                       <p style={{ margin: 0, fontSize: '12px', color: '#7f929e', maxWidth: '380px', lineHeight: 1.5 }}>
-                        Enter your brand name, rules, and marketing draft on the left, then click <strong>⚡ Run AI Analysis</strong>.
+                        Enter your brand name, rules, and marketing draft on the left, then click <strong>⚡ Run AI Analysis</strong> to view violations.
                       </p>
 
                       <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        <button
+                          type="button"
+                          className="primary-button"
+                          style={{ padding: '8px 16px', fontSize: '11px', fontWeight: '700' }}
+                          onClick={handleLoadCarePlus}
+                        >
+                          ⚡ Load Demo Scenario & Run AI Analysis
+                        </button>
                         <button
                           type="button"
                           className="ghost-button"
@@ -4350,114 +4411,37 @@ export default function App() {
                       </div>
                     </div>
                   ) : (
-                    /* Live Findings with One-Click Smart Rewrites */
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      {/* Real-time Approval Status Banner */}
-                      <div
-                        style={{
-                          padding: '12px 14px',
-                          borderRadius: '8px',
-                          background: currentReview.status === 'Approved' ? '#12261e' : '#231c12',
-                          border: currentReview.status === 'Approved' ? '1px solid #2e5944' : '1px solid #573f1d',
-                          color: currentReview.status === 'Approved' ? 'var(--mint)' : '#ffd27d',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          flexWrap: 'wrap',
-                          gap: '10px'
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                          <span style={{ fontSize: '18px' }}>
-                            {currentReview.status === 'Approved' ? '✅' : '⏳'}
-                          </span>
-                          <div>
-                            <strong style={{ fontSize: '12px', display: 'block' }}>
-                              {currentReview.status === 'Approved'
-                                ? 'Status: Approved by Admin ✓'
-                                : 'Status: Pending Admin Approval'}
-                            </strong>
-                            <span style={{ fontSize: '10px', opacity: 0.9 }}>
-                              {currentReview.status === 'Approved'
-                                ? 'Your situation evaluation request has been approved and certified by Admin. Cleared for publication.'
-                                : 'Your situation evaluation request has been submitted to Admin. It will remain in "Pending" status until an Admin reviews and approves it.'}
-                            </span>
-                          </div>
-                        </div>
-
-                        <span
-                          style={{
-                            fontSize: '10px',
-                            fontWeight: '800',
-                            padding: '4px 10px',
-                            borderRadius: '5px',
-                            background: currentReview.status === 'Approved' ? 'var(--mint)' : '#e5b869',
-                            color: '#09120e',
-                            textTransform: 'uppercase'
-                          }}
-                        >
-                          {currentReview.status === 'Approved' ? 'Approved' : 'Pending'}
-                        </span>
-                      </div>
-
-                      {/* Akira AI Governance Routing Pill Banner (Matching Image 1) */}
+                    /* Live Findings with One-Click Smart Rewrites (Image 1 Format) */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      {/* Top Header Summary Badge */}
                       <div
                         style={{
                           padding: '10px 14px',
                           borderRadius: '8px',
-                          background: 'linear-gradient(135deg, #10212b, #0d1820)',
-                          border: '1px solid #233b49',
+                          background: 'rgba(37, 99, 235, 0.1)',
+                          border: '1px solid rgba(37, 99, 235, 0.25)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
-                          flexWrap: 'wrap',
-                          gap: '8px'
+                          fontSize: '11px'
                         }}
                       >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <span style={{ fontSize: '13px' }}>⚡</span>
-                          <div>
-                            <strong style={{ fontSize: '11px', color: '#edf4f5', display: 'block' }}>
-                              Akira AI Route:{' '}
-                              <span style={{ color: currentReview.status === 'Approved' || complianceScore >= 80 ? 'var(--mint)' : complianceScore < 45 ? '#ff7878' : '#ffd27d' }}>
-                                {currentReview?.route_decision || (complianceScore >= 80 ? 'Auto-Resolve' : complianceScore < 45 ? 'Reject' : 'Escalate')}
-                              </span>
-                            </strong>
-                            <small style={{ color: '#88a1af', fontSize: '10px' }}>
-                              Stage 04 Decision:{' '}
-                              {currentReview.status === 'Approved'
-                                ? 'Content Approved by Moderator with SHA-256 seal'
-                                : complianceScore >= 80
-                                ? 'Content Approved (Limited) with Disclaimer'
-                                : complianceScore < 45
-                                ? 'Immediate AI Disqualification'
-                                : 'Human Moderator Review Enqueued in Super Admin Queue'}
-                            </small>
-                          </div>
-                        </div>
-
-                        <button
-                          type="button"
-                          className="ghost-button"
-                          style={{ fontSize: '10px', padding: '3px 8px', color: '#60a5fa', borderColor: '#2563eb' }}
-                          onClick={() => setActiveNav('Akira AI Pipeline')}
-                        >
-                          View 4-Stage Flowchart &rarr;
-                        </button>
-                      </div>
-
-                      <div style={{ background: '#0d171e', border: '1px solid #1f303a', borderRadius: '8px', padding: '12px', fontSize: '12px', lineHeight: '1.7', color: '#dce7eb' }}>
-                        <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--mint)', display: 'block', marginBottom: '6px' }}>
-                          EVALUATED DRAFT COPY (CLICK HIGHLIGHTS TO INSPECT):
+                        <span style={{ color: '#93c5fd', fontWeight: '700' }}>
+                          ⚡ Dual-Engine Scan Completed · {issues.length} Rules Evaluated
                         </span>
-                        <DraftCopy
-                          text={marketingDraft}
-                          issues={issues}
-                          selectedIssue={selectedIssue}
-                          onSelect={setSelectedIssue}
-                        />
+                        <span
+                          style={{
+                            color: issues.some((i) => i.state !== 'resolved') ? '#f87171' : '#4ade80',
+                            fontWeight: '800',
+                            fontSize: '10px',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {issues.some((i) => i.state !== 'resolved') ? '🔴 VIOLATIONS DETECTED' : '🟢 ALL RULES COMPLIANT'}
+                        </span>
                       </div>
 
+                      {/* 1st Photo: Rule Violation Cards */}
                       <div className="finding-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                         {issues.map((issue, idx) => {
                           const isResolved = issue.state === 'resolved'
@@ -4808,19 +4792,20 @@ export default function App() {
                   )}
                 </div>
 
-                {/* ── MANDATORY HUMAN SIGN-OFF GATE (From Image 2) ── */}
-                <div
-                  style={{
-                    marginTop: '24px',
-                    padding: '16px',
-                    borderRadius: '10px',
-                    background: '#0d171e',
-                    border: '1px solid #263944',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px'
-                  }}
-                >
+                {/* ── MANDATORY HUMAN SIGN-OFF GATE (Only shown after analysis) ── */}
+                {analysisDone && (
+                  <div
+                    style={{
+                      marginTop: '24px',
+                      padding: '16px',
+                      borderRadius: '10px',
+                      background: '#0d171e',
+                      border: '1px solid #263944',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '12px'
+                    }}
+                  >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <strong style={{ fontSize: '11px', fontWeight: '800', letterSpacing: '0.8px', color: '#edf4f5' }}>
                       MANDATORY HUMAN SIGN-OFF GATE
@@ -4955,7 +4940,8 @@ export default function App() {
                     </div>
                   )}
                 </div>
-              </div>
+              )}
+            </div>
             </section>
           </>
         )}
