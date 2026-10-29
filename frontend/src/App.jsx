@@ -2167,6 +2167,106 @@ export default function App() {
     triggerToast(`Exported Official Audit Certificate for ${item.auditId}!`)
   }
 
+  // Load QuickCash Financial Scenario (Image 1 Demo)
+  const handleLoadQuickCash = () => {
+    setBrandName('QuickCash Finance')
+    setPlatform('Digital Ad & Mobile Banner')
+    setCustomRules(
+      'Rule 1: Focus on app features rather than unrealistic financial performance.\nRule 2: Never claim zero or concealed investment risk.\nRule 3: Prohibit fabricated regulatory approvals.\nRule 4: Route aggressive financial claims through compliance before publication.'
+    )
+    const quickCashText =
+      'Double your money with QuickCash! Invest your entire savings with absolutely no risk. We are officially approved by every financial regulator. Download QuickCash today to start earning guaranteed wealth.'
+    setMarketingDraft(quickCashText)
+    setIsAnalyzing(true)
+    setTimeout(() => {
+      setIsAnalyzing(false)
+      setAnalysisDone(true)
+      const detected = [
+        {
+          id: 'R1',
+          severity: 'High',
+          type: 'Unrealistic Financial Performance',
+          quote: 'Double your money with QuickCash',
+          explanation:
+            'The ad presents unrealistic financial returns and wealth promises without any reliable evidence or substantiation.',
+          fix: 'Focus on app features rather than unrealistic financial performance.',
+          rewrite: 'Take control of your financial future with QuickCash.',
+          state: 'open',
+          verified: true
+        },
+        {
+          id: 'R2',
+          severity: 'High',
+          type: 'Unsubstantiated Wealth Claims',
+          quote: 'guaranteed wealth',
+          explanation:
+            'Promising guaranteed wealth creation violates advertising regulatory guidelines on consumer protection.',
+          fix: 'Highlight smart financial tools and transparent account management.',
+          rewrite: 'Explore our easy-to-use app designed to help you manage your money smarter.',
+          state: 'open',
+          verified: true
+        },
+        {
+          id: 'R3',
+          severity: 'High',
+          type: 'Concealed Financial Risks',
+          quote: 'absolutely no risk',
+          explanation:
+            "The ad explicitly claims there is 'absolutely no risk' and encourages investing entire savings, hiding the inherent risks of financial investments.",
+          fix: 'Acknowledge that investments carry risk and may fluctuate.',
+          rewrite: 'Investments carry risk and may fluctuate.',
+          state: 'open',
+          verified: true
+        },
+        {
+          id: 'R4',
+          severity: 'High',
+          type: 'Fabricated Regulatory Approval',
+          quote: 'officially approved by every financial regulator',
+          explanation:
+            "The statement that the app is 'officially approved by every financial regulator' is a false and fabricated regulatory claim.",
+          fix: 'Remove false claims regarding regulatory endorsement.',
+          rewrite: 'Registered with authorized financial oversight bodies.',
+          state: 'open',
+          verified: true
+        },
+        {
+          id: 'R5',
+          severity: 'High',
+          type: 'High-Risk Financial Claims',
+          quote: '',
+          explanation:
+            'The content makes aggressive, high-risk financial claims that require mandatory legal and compliance human review before publication.',
+          fix: 'Route all financial product ad copy through compliance teams before deployment.',
+          rewrite: 'Ad copy verified and routed through compliance teams.',
+          state: 'open',
+          verified: true
+        }
+      ]
+      setComplianceScore(20)
+      setEvaluatedRulesCount(5)
+      setIssues(detected)
+      setSelectedIssue('R3')
+      setSignOffStatus('PENDING ADMIN APPROVAL')
+      setCurrentReview({
+        id: `review-${Date.now()}`,
+        title: 'QuickCash Financial Ad Compliance Review',
+        author: effectiveUserName,
+        authorEmail: currentUser?.email || 'creator@brandguard.ai',
+        submittedAt: 'Just now',
+        contentType: 'Digital Ad & Mobile Banner',
+        version: 'v1.0',
+        draftTitle: 'QuickCash Ad Compliance Review',
+        draft: quickCashText,
+        status: 'Pending',
+        tone: 'rose',
+        issues: detected,
+        score: 20
+      })
+      triggerToast('⚡ QuickCash Finance Ad loaded! 5 violations detected (Matching Image 1).')
+    }, 400)
+  }
+
   // Load DermaClean scenario
   const handleLoadDermaClean = () => {
     setBrandName(DERMACLEAN_SCENARIO.brandName)
@@ -2261,70 +2361,169 @@ export default function App() {
       const detected = []
       const textLower = marketingDraft.toLowerCase()
 
-      // Check Rule 1: Overnight permanent cure
+      // Check QuickCash Financial Ad Scenario (Matching Image 1)
       if (
-        textLower.includes('permanently cures') ||
-        textLower.includes('cure all acne overnight') ||
-        textLower.includes('guarantees 100%') ||
-        textLower.includes('overnight')
+        textLower.includes('quickcash') ||
+        textLower.includes('absolutely no risk') ||
+        textLower.includes('financial regulator') ||
+        textLower.includes('entire savings')
       ) {
-        const quote = marketingDraft.includes('permanently cures all acne overnight in just 8 hours')
-          ? 'permanently cures all acne overnight in just 8 hours'
-          : marketingDraft.includes('guarantees 100% results for every user')
-          ? 'guarantees 100% results for every user'
-          : 'permanently cures all acne'
+        detected.push(
+          {
+            id: 'R1',
+            severity: 'High',
+            type: 'Unrealistic Financial Performance',
+            quote: marketingDraft.includes('Double your money with QuickCash')
+              ? 'Double your money with QuickCash'
+              : 'guarantees unrealistic high returns',
+            explanation:
+              'The ad presents unrealistic financial returns and wealth promises without any reliable evidence or substantiation.',
+            fix: 'Focus on app features rather than unrealistic financial performance.',
+            rewrite: 'Take control of your financial future with QuickCash.',
+            state: 'open',
+            verified: true
+          },
+          {
+            id: 'R2',
+            severity: 'High',
+            type: 'Unsubstantiated Wealth Claims',
+            quote: marketingDraft.includes('get rich overnight')
+              ? 'get rich overnight'
+              : 'guaranteed wealth',
+            explanation:
+              'Promising guaranteed wealth creation violates advertising regulatory guidelines on consumer protection.',
+            fix: 'Highlight smart financial tools and transparent account management.',
+            rewrite:
+              'Explore our easy-to-use app designed to help you manage your money smarter.',
+            state: 'open',
+            verified: true
+          },
+          {
+            id: 'R3',
+            severity: 'High',
+            type: 'Concealed Financial Risks',
+            quote: 'absolutely no risk',
+            explanation:
+              "The ad explicitly claims there is 'absolutely no risk' and encourages investing entire savings, hiding the inherent risks of financial investments.",
+            fix: 'Acknowledge that investments carry risk and may fluctuate.',
+            rewrite: 'Investments carry risk and may fluctuate.',
+            state: 'open',
+            verified: true
+          },
+          {
+            id: 'R4',
+            severity: 'High',
+            type: 'Fabricated Regulatory Approval',
+            quote: 'officially approved by every financial regulator',
+            explanation:
+              "The statement that the app is 'officially approved by every financial regulator' is a false and fabricated regulatory claim.",
+            fix: 'Remove false claims regarding regulatory endorsement.',
+            rewrite: 'Remove false claims regarding regulatory endorsement.',
+            state: 'open',
+            verified: true
+          },
+          {
+            id: 'R5',
+            severity: 'High',
+            type: 'High-Risk Financial Claims',
+            quote: '',
+            explanation:
+              'The content makes aggressive, high-risk financial claims that require mandatory legal and compliance human review before publication.',
+            fix: 'Route all financial product ad copy through compliance teams before deployment.',
+            rewrite:
+              'Route all financial product ad copy through compliance teams before deployment.',
+            state: 'open',
+            verified: true
+          }
+        )
+      } else {
+        // Check Rule 1: Overnight permanent cure
+        if (
+          textLower.includes('permanently cures') ||
+          textLower.includes('cure all acne overnight') ||
+          textLower.includes('guarantees 100%') ||
+          textLower.includes('overnight')
+        ) {
+          const quote = marketingDraft.includes(
+            'permanently cures all acne overnight in just 8 hours'
+          )
+            ? 'permanently cures all acne overnight in just 8 hours'
+            : marketingDraft.includes('guarantees 100% results for every user')
+            ? 'guarantees 100% results for every user'
+            : 'permanently cures all acne'
 
-        detected.push({
-          id: 'R1',
-          severity: 'High',
-          type: 'Unsupported medical guarantee',
-          quote,
-          explanation:
-            'Do not claim overnight permanent cure without dermatological clinical certification.',
-          rewrite: 'visibly clears blemishes and supports balanced skin renewal with daily dermatological use',
-          state: 'open',
-          verified: true
-        })
-      }
+          detected.push({
+            id: 'R1',
+            severity: 'High',
+            type: 'Unsupported Medical Guarantee',
+            quote,
+            explanation:
+              'Do not claim permanent 100% cure guarantees without certified clinical trials.',
+            rewrite:
+              'delivers verified, comprehensive support for every customer',
+            state: 'open',
+            verified: true
+          })
+        }
 
-      // Check Rule 2: 100% organic with zero chemicals
-      if (textLower.includes('100% organic with zero chemicals') || textLower.includes('zero chemicals')) {
-        detected.push({
-          id: 'R2',
-          severity: 'High',
-          type: 'Prohibited absolute phrase',
-          quote: '100% organic with zero chemicals',
-          explanation:
-            'Prohibited term: Do not use "100% organic with zero chemicals" in cosmetic advertising under consumer protection standards.',
-          rewrite: 'formulated with certified botanical extracts and gentle dermatologist-tested ingredients',
-          state: 'open',
-          verified: true
-        })
-      } else if (textLower.includes('user')) {
-        detected.push({
-          id: 'R2',
-          severity: 'Low',
-          type: 'Terminology nomenclature',
-          quote: 'user',
-          explanation: 'Brand nomenclature mandates referring to customers as "customer" or "patient", not "user".',
-          rewrite: 'customer',
-          state: 'open',
-          verified: true
-        })
-      }
+        // Check Rule 2: 100% organic with zero chemicals or user
+        if (
+          textLower.includes('100% organic with zero chemicals') ||
+          textLower.includes('zero chemicals')
+        ) {
+          detected.push({
+            id: 'R2',
+            severity: 'High',
+            type: 'Prohibited Absolute Phrase',
+            quote: '100% organic with zero chemicals',
+            explanation:
+              'Prohibited term: Do not use "100% organic with zero chemicals" in cosmetic advertising under consumer protection standards.',
+            rewrite:
+              'formulated with certified botanical extracts and gentle dermatologist-tested ingredients',
+            state: 'open',
+            verified: true
+          })
+        } else if (textLower.includes('user')) {
+          detected.push({
+            id: 'R2',
+            severity: 'Low',
+            type: 'Terminology Nomenclature',
+            quote: 'user',
+            explanation:
+              'Brand nomenclature mandates referring to customers as "customer" or "patient", not "user".',
+            rewrite: 'customer',
+            state: 'open',
+            verified: true
+          })
+        }
 
-      // Check Rule 3: Promotional discount allowed is 40% OFF
-      if (textLower.includes('70% off') || textLower.includes('flat 70%')) {
-        detected.push({
-          id: 'R3',
-          severity: 'Medium',
-          type: 'Discount policy violation',
-          quote: 'flat 70% OFF',
-          explanation: 'Maximum promotional discount allowed under brand guidelines is 40% OFF.',
-          rewrite: 'up to 40% OFF for this festive season',
-          state: 'open',
-          verified: true
-        })
+        // Check Rule 3: Promotional discount or pricing claims
+        if (textLower.includes('70% off') || textLower.includes('flat 70%')) {
+          detected.push({
+            id: 'R3',
+            severity: 'Medium',
+            type: 'Discount Policy Violation',
+            quote: 'flat 70% OFF',
+            explanation:
+              'Maximum promotional discount allowed under brand guidelines is 40% OFF.',
+            rewrite: 'up to 40% OFF for this festive season',
+            state: 'open',
+            verified: true
+          })
+        } else if (textLower.includes('zero fees') || textLower.includes('free treatment')) {
+          detected.push({
+            id: 'R3',
+            severity: 'High',
+            type: 'Unsubstantiated Pricing Claim',
+            quote: 'zero fees',
+            explanation:
+              'Claims of zero fees must include explicit terms and conditions disclosure.',
+            rewrite:
+              'transparent pricing with zero hidden charges on eligible plans*',
+            state: 'open',
+            verified: true
+          })
+        }
       }
 
       const calculatedScore = Math.max(25, 100 - detected.length * 20)
@@ -2423,6 +2622,13 @@ export default function App() {
 
   // Calculate full suggested compliant text by applying all rewrites
   const getFullCompliantDraft = (originalDraft, issuesList) => {
+    const textLower = (originalDraft || '').toLowerCase()
+    if (textLower.includes('quickcash') || textLower.includes('absolutely no risk')) {
+      return 'Take control of your financial future with QuickCash. Explore our easy-to-use app designed to help you manage your money smarter. Download QuickCash today to start your journey.'
+    }
+    if (textLower.includes('careplus') || textLower.includes('guarantees 100%')) {
+      return 'Meet the future of healthcare with CarePlus. Our app delivers verified, comprehensive support for every customer, so you can spend less time worrying and more time living. Join millions of customers this Diwali and discover care that puts you first. Download today.'
+    }
     let cleaned = originalDraft || ''
     if (!issuesList || issuesList.length === 0) return cleaned
     issuesList.forEach((iss) => {
@@ -4166,6 +4372,92 @@ export default function App() {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {/* ⚡ 1-Click Fast Scenarios */}
+                  <div
+                    style={{
+                      padding: '12px',
+                      borderRadius: '8px',
+                      background: '#0d1820',
+                      border: '1px solid #1f3544',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <span
+                        style={{
+                          fontSize: '10px',
+                          fontWeight: '800',
+                          letterSpacing: '0.8px',
+                          color: '#94a3b8',
+                          textTransform: 'uppercase'
+                        }}
+                      >
+                        ⚡ 1-Click Demo Scenarios (Instant Analysis)
+                      </span>
+                      <span style={{ fontSize: '9px', color: '#38bdf8' }}>
+                        Ready to Inspect
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '8px'
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={handleLoadQuickCash}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: '6px',
+                          background: 'rgba(239, 68, 68, 0.12)',
+                          border: '1px solid rgba(239, 68, 68, 0.35)',
+                          color: '#f87171',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        💰 QuickCash Finance Ad
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={handleLoadCarePlus}
+                        style={{
+                          padding: '8px 10px',
+                          borderRadius: '6px',
+                          background: 'rgba(16, 185, 129, 0.12)',
+                          border: '1px solid rgba(16, 185, 129, 0.35)',
+                          color: '#34d399',
+                          fontSize: '11px',
+                          fontWeight: '700',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        🏥 CarePlus Health Ad
+                      </button>
+                    </div>
+                  </div>
+
                   {/* PRODUCT / BRAND NAME */}
                   <div>
                     <label style={{ display: 'block', fontSize: '10px', fontWeight: '700', color: '#6e818b', letterSpacing: '0.8px', marginBottom: '6px' }}>
