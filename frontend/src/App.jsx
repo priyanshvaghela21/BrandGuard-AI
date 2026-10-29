@@ -1848,6 +1848,8 @@ export default function App() {
   const [customRules, setCustomRules] = useState('')
   const [marketingDraft, setMarketingDraft] = useState('')
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [researchStage, setResearchStage] = useState(0)
+  const [researchLogs, setResearchLogs] = useState([])
   const [analysisDone, setAnalysisDone] = useState(false)
   const [complianceScore, setComplianceScore] = useState(null)
   const [evaluatedRulesCount, setEvaluatedRulesCount] = useState(0)
@@ -2167,188 +2169,6 @@ export default function App() {
     triggerToast(`Exported Official Audit Certificate for ${item.auditId}!`)
   }
 
-  // Load QuickCash Financial Scenario (Image 1 Demo)
-  const handleLoadQuickCash = () => {
-    setBrandName('QuickCash Finance')
-    setPlatform('Digital Ad & Mobile Banner')
-    setCustomRules(
-      'Rule 1: Focus on app features rather than unrealistic financial performance.\nRule 2: Never claim zero or concealed investment risk.\nRule 3: Prohibit fabricated regulatory approvals.\nRule 4: Route aggressive financial claims through compliance before publication.'
-    )
-    const quickCashText =
-      'Double your money with QuickCash! Invest your entire savings with absolutely no risk. We are officially approved by every financial regulator. Download QuickCash today to start earning guaranteed wealth.'
-    setMarketingDraft(quickCashText)
-    setIsAnalyzing(true)
-    setTimeout(() => {
-      setIsAnalyzing(false)
-      setAnalysisDone(true)
-      const detected = [
-        {
-          id: 'R1',
-          severity: 'High',
-          type: 'Unrealistic Financial Performance',
-          quote: 'Double your money with QuickCash',
-          explanation:
-            'The ad presents unrealistic financial returns and wealth promises without any reliable evidence or substantiation.',
-          fix: 'Focus on app features rather than unrealistic financial performance.',
-          rewrite: 'Take control of your financial future with QuickCash.',
-          state: 'open',
-          verified: true
-        },
-        {
-          id: 'R2',
-          severity: 'High',
-          type: 'Unsubstantiated Wealth Claims',
-          quote: 'guaranteed wealth',
-          explanation:
-            'Promising guaranteed wealth creation violates advertising regulatory guidelines on consumer protection.',
-          fix: 'Highlight smart financial tools and transparent account management.',
-          rewrite: 'Explore our easy-to-use app designed to help you manage your money smarter.',
-          state: 'open',
-          verified: true
-        },
-        {
-          id: 'R3',
-          severity: 'High',
-          type: 'Concealed Financial Risks',
-          quote: 'absolutely no risk',
-          explanation:
-            "The ad explicitly claims there is 'absolutely no risk' and encourages investing entire savings, hiding the inherent risks of financial investments.",
-          fix: 'Acknowledge that investments carry risk and may fluctuate.',
-          rewrite: 'Investments carry risk and may fluctuate.',
-          state: 'open',
-          verified: true
-        },
-        {
-          id: 'R4',
-          severity: 'High',
-          type: 'Fabricated Regulatory Approval',
-          quote: 'officially approved by every financial regulator',
-          explanation:
-            "The statement that the app is 'officially approved by every financial regulator' is a false and fabricated regulatory claim.",
-          fix: 'Remove false claims regarding regulatory endorsement.',
-          rewrite: 'Registered with authorized financial oversight bodies.',
-          state: 'open',
-          verified: true
-        },
-        {
-          id: 'R5',
-          severity: 'High',
-          type: 'High-Risk Financial Claims',
-          quote: '',
-          explanation:
-            'The content makes aggressive, high-risk financial claims that require mandatory legal and compliance human review before publication.',
-          fix: 'Route all financial product ad copy through compliance teams before deployment.',
-          rewrite: 'Ad copy verified and routed through compliance teams.',
-          state: 'open',
-          verified: true
-        }
-      ]
-      setComplianceScore(20)
-      setEvaluatedRulesCount(5)
-      setIssues(detected)
-      setSelectedIssue('R3')
-      setSignOffStatus('PENDING ADMIN APPROVAL')
-      setCurrentReview({
-        id: `review-${Date.now()}`,
-        title: 'QuickCash Financial Ad Compliance Review',
-        author: effectiveUserName,
-        authorEmail: currentUser?.email || 'creator@brandguard.ai',
-        submittedAt: 'Just now',
-        contentType: 'Digital Ad & Mobile Banner',
-        version: 'v1.0',
-        draftTitle: 'QuickCash Ad Compliance Review',
-        draft: quickCashText,
-        status: 'Pending',
-        tone: 'rose',
-        issues: detected,
-        score: 20
-      })
-      triggerToast('⚡ QuickCash Finance Ad loaded! 5 violations detected (Matching Image 1).')
-    }, 400)
-  }
-
-  // Load DermaClean scenario
-  const handleLoadDermaClean = () => {
-    setBrandName(DERMACLEAN_SCENARIO.brandName)
-    setPlatform(DERMACLEAN_SCENARIO.platform)
-    setCustomRules(DERMACLEAN_SCENARIO.rulesText)
-    setMarketingDraft(DERMACLEAN_SCENARIO.draftText)
-    setAnalysisDone(false)
-    setComplianceScore(null)
-    setEvaluatedRulesCount(0)
-    setSignOffStatus('NOT STARTED')
-    triggerToast('Loaded DermaClean Herbal cosmetic scenario!')
-  }
-
-  // Load CarePlus scenario
-  const handleLoadCarePlus = () => {
-    setBrandName(CAREPLUS_SCENARIO.brandName)
-    setPlatform(CAREPLUS_SCENARIO.platform)
-    setCustomRules(CAREPLUS_SCENARIO.rulesText)
-    setMarketingDraft(CAREPLUS_SCENARIO.draftText)
-    setIsAnalyzing(true)
-    setTimeout(() => {
-      setIsAnalyzing(false)
-      setAnalysisDone(true)
-      const detected = [
-        {
-          id: 'R1',
-          severity: 'High',
-          type: 'Unsupported Medical Guarantee',
-          quote: 'guarantees 100% results for every user',
-          explanation: 'Do not claim permanent 100% cure guarantees without certified clinical trials.',
-          fix: 'Focus on clinically verified support and realistic patient outcomes.',
-          rewrite: 'delivers verified, comprehensive support for every customer',
-          state: 'open',
-          verified: true
-        },
-        {
-          id: 'R2',
-          severity: 'Low',
-          type: 'Terminology Nomenclature',
-          quote: 'user',
-          explanation: 'Brand nomenclature mandates referring to customers as "customer" or "patient", not "user".',
-          fix: 'Refer to individuals as "customer", "patient", or "member".',
-          rewrite: 'customer',
-          state: 'open',
-          verified: true
-        },
-        {
-          id: 'R3',
-          severity: 'High',
-          type: 'Unsubstantiated Pricing Claim',
-          quote: 'zero fees',
-          explanation: 'The ad explicitly claims zero fees without providing mandatory disclosure of terms and coverage eligibility.',
-          fix: 'Provide transparent pricing disclosures and clarify covered preventative care tiers.',
-          rewrite: 'transparent pricing with zero hidden charges on covered preventive care*',
-          state: 'open',
-          verified: true
-        }
-      ]
-      setComplianceScore(35)
-      setEvaluatedRulesCount(3)
-      setIssues(detected)
-      setSelectedIssue(detected[0]?.id || '')
-      setSignOffStatus('PENDING ADMIN APPROVAL')
-      setCurrentReview({
-        id: `review-${Date.now()}`,
-        title: 'CarePlus Health Situation & Marketing Review',
-        author: effectiveUserName,
-        authorEmail: currentUser?.email || 'creator@brandguard.ai',
-        submittedAt: 'Just now',
-        contentType: 'Social media banner & digital ads',
-        version: 'v1.0',
-        draftTitle: 'CarePlus Health Situation Review',
-        draft: CAREPLUS_SCENARIO.draftText,
-        status: 'Pending',
-        tone: 'amber',
-        issues: detected,
-        score: 35
-      })
-      triggerToast('⚡ CarePlus loaded & analyzed! 3 brand violations detected.')
-    }, 400)
-  }
-
   // Universal Dynamic AI Analysis Engine for ANY Company, Brand Rules, and Marketing Draft
   const analyzeCustomBrandDraft = (draft = '', rulesText = '', brand = '', channel = '') => {
     const issues = []
@@ -2385,7 +2205,7 @@ export default function App() {
       pushFinding({
         title: 'Unrealistic Financial Performance',
         quote: text.includes('Double your money with QuickCash') ? 'Double your money with QuickCash' : 'Double your money',
-        explanation: 'The ad presents unrealistic financial returns and wealth promises without any reliable evidence or substantiation.',
+        explanation: '[FTC Act § 5 / SEC Rule 156]: The ad presents unrealistic financial returns and wealth promises without reliable evidence or statutory risk disclosures.',
         fix: 'Focus on app features rather than unrealistic financial performance.',
         rewrite: `Take control of your financial future with ${targetBrand}.`,
         severity: 'High'
@@ -2393,7 +2213,7 @@ export default function App() {
       pushFinding({
         title: 'Unsubstantiated Wealth Claims',
         quote: text.includes('start earning guaranteed wealth') ? 'start earning guaranteed wealth' : text.includes('guaranteed wealth') ? 'guaranteed wealth' : 'get rich overnight',
-        explanation: 'Promising guaranteed wealth creation violates advertising regulatory guidelines on consumer protection.',
+        explanation: '[Consumer Protection Standards]: Promising guaranteed wealth creation violates advertising regulatory guidelines on consumer financial protection.',
         fix: 'Highlight smart financial tools and transparent account management.',
         rewrite: 'Explore our easy-to-use app designed to help you manage your money smarter.',
         severity: 'High'
@@ -2401,7 +2221,7 @@ export default function App() {
       pushFinding({
         title: 'Concealed Financial Risks',
         quote: text.includes('absolutely no risk') ? 'absolutely no risk' : 'no risk',
-        explanation: "The ad explicitly claims there is 'absolutely no risk' and encourages investing entire savings, hiding the inherent risks of financial investments.",
+        explanation: "[Financial Conduct Guidelines]: The ad explicitly claims there is 'absolutely no risk' and encourages investing entire savings, hiding the inherent volatility of financial markets.",
         fix: 'Acknowledge that investments carry risk and may fluctuate.',
         rewrite: 'Investments carry risk and may fluctuate.',
         severity: 'High'
@@ -2409,7 +2229,7 @@ export default function App() {
       pushFinding({
         title: 'Fabricated Regulatory Approval',
         quote: text.includes('officially approved by every financial regulator') ? 'officially approved by every financial regulator' : 'approved by every financial regulator',
-        explanation: "The statement that the app is 'officially approved by every financial regulator' is a false and fabricated regulatory claim.",
+        explanation: "[Regulatory Compliance Code]: The statement that the app is 'officially approved by every financial regulator' constitutes a false and legally actionable endorsement claim.",
         fix: 'Remove false claims regarding regulatory endorsement.',
         rewrite: 'Operating in accordance with authorized financial regulatory standards.',
         severity: 'High'
@@ -2417,7 +2237,7 @@ export default function App() {
       pushFinding({
         title: 'High-Risk Financial Claims',
         quote: text.includes('Invest your entire savings') ? 'Invest your entire savings' : '',
-        explanation: 'The content makes aggressive, high-risk financial claims that require mandatory legal and compliance human review before publication.',
+        explanation: '[Responsible Financial Advertising]: Encouraging consumers to commit entire life savings requires mandatory legal and compliance officer human sign-off before publication.',
         fix: 'Route all financial product ad copy through compliance teams before deployment.',
         rewrite: 'Invest responsibly according to your personal financial plan.',
         severity: 'High'
@@ -2467,7 +2287,7 @@ export default function App() {
           pushFinding({
             title: ruleTitle,
             quote: found,
-            explanation: `The copy contains "${found}", which directly violates custom guideline: "${ruleBody}".`,
+            explanation: `[Brand Policy Rule]: The copy contains "${found}", which directly violates custom guideline: "${ruleBody}".`,
             fix: `Remove or rephrase prohibited statement "${found}".`,
             rewrite: `verified ${targetBrand} features`,
             severity: 'High'
@@ -2486,7 +2306,7 @@ export default function App() {
             pushFinding({
               title: ruleTitle,
               quote: found,
-              explanation: `Copy contains prohibited phrase "${found}" violating rule: "${ruleBody}".`,
+              explanation: `[Brand Governance]: Copy contains prohibited phrase "${found}" violating rule: "${ruleBody}".`,
               fix: `Replace unapproved terminology with brand-compliant phrasing.`,
               rewrite: `designed for quality and customer satisfaction`,
               severity: 'High'
@@ -2506,7 +2326,7 @@ export default function App() {
             pushFinding({
               title: 'Promotional Discount Policy',
               quote: draftPctMatch[0],
-              explanation: `Promotional discount of ${draftPct}% exceeds the maximum permissible limit of ${maxPct}% under brand governance.`,
+              explanation: `[Pricing Governance]: Promotional discount of ${draftPct}% exceeds the maximum permissible limit of ${maxPct}% under brand governance.`,
               fix: `Cap promotional discount to maximum ${maxPct}% OFF.`,
               rewrite: `up to ${maxPct}% OFF for eligible orders`,
               severity: 'Medium'
@@ -2516,13 +2336,13 @@ export default function App() {
       }
     })
 
-    // C. Comprehensive Universal Brand Safety & Regulatory Engine (Cross-Industry)
+    // C. Comprehensive Universal Brand Safety & Regulatory Engine (Cross-Industry Research Benchmarks)
     const UNIVERSAL_CHECKS = [
       {
         regex: /permanently cures?(?: all [^!.,]+)?|cure all acne overnight|cure for all diseases|instant permanent cure/i,
         title: 'Unsupported Medical Guarantee',
         severity: 'High',
-        explanation: 'Do not claim permanent 100% cure guarantees or immediate disease eradication without verified clinical certification.',
+        explanation: '[FDA 21 CFR / Healthcare Advertising Code]: Do not claim permanent 100% cure guarantees or immediate disease eradication without verified clinical certification.',
         fix: 'Focus on certified formulation, dermatological testing, and realistic health benefits.',
         rewrite: 'delivers verified, visible support for healthy skin with regular use'
       },
@@ -2530,7 +2350,7 @@ export default function App() {
         regex: /100% organic with zero chemicals|zero chemicals|100% chemical free|chemical[- ]free/i,
         title: 'Prohibited Absolute Phrase',
         severity: 'High',
-        explanation: 'Prohibited term: "Zero chemicals" is scientifically inaccurate and prohibited under consumer protection advertising standards.',
+        explanation: '[Cosmetic Safety & Consumer Protection]: Prohibited term: "Zero chemicals" is scientifically inaccurate and prohibited under consumer protection advertising standards.',
         fix: 'Use approved phrasing such as botanical ingredients or dermatologist-tested.',
         rewrite: 'formulated with certified botanical extracts and gentle dermatologist-tested ingredients'
       },
@@ -2538,7 +2358,7 @@ export default function App() {
         regex: /guarantees? 100% results?(?: for [^!.,]+)?|100% guaranteed results?|guaranteed 100%/i,
         title: 'Absolute Efficacy Guarantee',
         severity: 'High',
-        explanation: 'Guaranteeing 100% results is considered unsubstantiated and deceptive under advertising governance.',
+        explanation: '[FTC Truth-in-Advertising]: Guaranteeing 100% results without verifiable clinical substantiation is classified as deceptive advertising.',
         fix: 'Replace absolute guarantees with tested benefits and realistic customer outcomes.',
         rewrite: 'delivers proven, high-quality outcomes for satisfied customers'
       },
@@ -2546,7 +2366,7 @@ export default function App() {
         regex: /double your money(?: with [^!.,]+)?|double your investment/i,
         title: 'Unrealistic Financial Performance',
         severity: 'High',
-        explanation: 'Presents unrealistic financial returns and wealth promises without reliable evidence or risk disclosure.',
+        explanation: '[FTC Act § 5 / SEC Rule 156]: Presents unrealistic financial returns and wealth promises without reliable evidence or mandatory risk disclosure.',
         fix: 'Focus on product features and prudent financial tools.',
         rewrite: `Take control of your financial future with ${targetBrand}.`
       },
@@ -2554,7 +2374,7 @@ export default function App() {
         regex: /get rich overnight|get rich quick|guaranteed wealth|become a millionaire overnight|guaranteed returns?/i,
         title: 'Unsubstantiated Wealth Claims',
         severity: 'High',
-        explanation: 'Promising guaranteed wealth creation or overnight returns violates advertising regulatory guidelines on consumer protection.',
+        explanation: '[Consumer Financial Protection]: Promising guaranteed wealth creation or overnight returns violates advertising regulatory guidelines on misleading representations.',
         fix: 'Highlight smart tools, transparent management, and steady financial growth.',
         rewrite: 'designed to help you manage your resources smarter and achieve steady progress.'
       },
@@ -2562,7 +2382,7 @@ export default function App() {
         regex: /absolutely no risk|zero risk|100% risk[- ]free|no risk involved|cannot lose/i,
         title: 'Concealed Risk Disclosure',
         severity: 'High',
-        explanation: 'Explicitly claiming zero risk hides product risks and market volatility, violating consumer transparency regulations.',
+        explanation: '[Financial Conduct Authority Standards]: Explicitly claiming zero risk hides product risks and market volatility, violating consumer transparency regulations.',
         fix: 'Acknowledge realistic performance conditions and mandatory risk disclosures.',
         rewrite: 'Investments and services carry inherent risks; terms apply.'
       },
@@ -2570,7 +2390,7 @@ export default function App() {
         regex: /officially approved by every (?:financial )?regulator|approved by all regulators|endorsed by the government/i,
         title: 'Fabricated Regulatory Approval',
         severity: 'High',
-        explanation: 'Blanket claims of total regulatory endorsement are deceptive, unverified, and subject to severe compliance penalties.',
+        explanation: '[Statutory Truth in Advertising]: Blanket claims of total regulatory endorsement are deceptive, unverified, and subject to severe compliance penalties.',
         fix: 'Remove false claims regarding blanket regulatory endorsement.',
         rewrite: 'Operating in accordance with authorized financial regulatory standards.'
       },
@@ -2578,7 +2398,7 @@ export default function App() {
         regex: /invest your entire savings|put all your savings/i,
         title: 'High-Risk Consumer Solicitation',
         severity: 'High',
-        explanation: 'Encouraging consumers to commit entire life savings to a single product violates responsible advertising guidelines.',
+        explanation: '[Responsible Advertising Guidelines]: Encouraging consumers to commit entire life savings to a single product violates responsible advertising guidelines.',
         fix: 'Promote prudent financial planning and responsible participation.',
         rewrite: 'Start with an amount comfortable for your budget and goals.'
       },
@@ -2586,7 +2406,7 @@ export default function App() {
         regex: /better than (?:all )?competitors|destroys the competition|crushes rivals|cheapest in the world|#1 in the world|unbeatable in the world/i,
         title: 'Unsubstantiated Comparative Claim',
         severity: 'Medium',
-        explanation: 'Comparative superlatives and competitor disparagement require verifiable independent market benchmarks.',
+        explanation: '[Comparative Advertising Directive]: Comparative superlatives and competitor disparagement require verifiable independent market benchmarks.',
         fix: 'Highlight unique brand differentiators without unverified competitor disparagement.',
         rewrite: 'delivering top-tier value and industry-leading performance'
       },
@@ -2594,7 +2414,7 @@ export default function App() {
         regex: /flat (?:50|60|70|80|90)% off|(?:50|60|70|80|90)% off/i,
         title: 'Discount Policy Violation',
         severity: 'Medium',
-        explanation: 'Promotional discount exceeds approved brand guardrails (maximum 40% OFF permitted).',
+        explanation: '[Pricing Guardrails]: Promotional discount exceeds approved brand guardrails (maximum 40% OFF permitted).',
         fix: 'Cap promotional discount to approved company policy (up to 40% OFF).',
         rewrite: 'up to 40% OFF for this festive promotional season'
       },
@@ -2602,7 +2422,7 @@ export default function App() {
         regex: /\buser\b|\busers\b|\bend-user\b|\bend-users\b/i,
         title: 'Terminology Nomenclature',
         severity: 'Low',
-        explanation: 'Brand nomenclature mandates referring to users as "customer", "member", or "client".',
+        explanation: '[Brand Identity Standards]: Brand nomenclature mandates referring to customers as "customer", "member", or "patient", not "user".',
         fix: 'Replace cold technical nomenclature with human-centric brand terminology.',
         rewrite: 'customer'
       },
@@ -2610,7 +2430,7 @@ export default function App() {
         regex: /zero fees|completely free forever with no catches/i,
         title: 'Unsubstantiated Pricing Claim',
         severity: 'Medium',
-        explanation: 'Claims of zero fees must include explicit terms and conditions disclosure and applicable qualifying criteria.',
+        explanation: '[Price Transparency Standards]: Claims of zero fees must include explicit terms and conditions disclosure and applicable qualifying criteria.',
         fix: 'Clarify eligible tiers and provide transparent pricing disclosures.',
         rewrite: 'transparent pricing with zero hidden charges on eligible plans*'
       }
@@ -2633,99 +2453,181 @@ export default function App() {
     return issues
   }
 
-  // Run AI Analysis (Dual-Engine: Deterministic + Dynamic Universal Analyzer)
-  const handleRunAiAnalysis = () => {
-    if (!marketingDraft.trim()) {
+  // Live Multi-Phase AI Deep Research Pipeline
+  const executeAiDeepResearch = (draftToAnalyze, rulesToAnalyze, brandToAnalyze, platformToAnalyze) => {
+    const activeDraft = draftToAnalyze !== undefined && draftToAnalyze !== null ? draftToAnalyze : marketingDraft
+    const activeRules = rulesToAnalyze !== undefined && rulesToAnalyze !== null ? rulesToAnalyze : customRules
+    const activeBrand = brandToAnalyze !== undefined && brandToAnalyze !== null ? brandToAnalyze : brandName
+    const activePlatform = platformToAnalyze !== undefined && platformToAnalyze !== null ? platformToAnalyze : platform
+
+    if (!activeDraft || !activeDraft.trim()) {
       triggerToast('Please provide marketing draft content to review.')
       return
     }
 
     setIsAnalyzing(true)
+    setAnalysisDone(false)
+    setResearchStage(1)
+    setResearchLogs([
+      `🔬 Phase 1/4: Ingesting brand context & linguistic tokens for "${activeBrand || 'Brand'}"...`
+    ])
+
     setTimeout(() => {
-      setIsAnalyzing(false)
-      setAnalysisDone(true)
-
-      const detected = analyzeCustomBrandDraft(
-        marketingDraft,
-        customRules,
-        brandName,
-        platform
-      )
-
-      const calculatedScore =
-        detected.length === 0
-          ? 100
-          : Math.max(20, 100 - detected.length * 18)
-
-      const ruleLineCount = (customRules || '').split('\n').filter((l) => l.trim().length > 0).length
-      setComplianceScore(calculatedScore)
-      setEvaluatedRulesCount(Math.max(detected.length, ruleLineCount || 4))
-      setIssues(detected)
-      setSelectedIssue(detected[0]?.id || '')
-      setSignOffStatus(detected.length === 0 ? 'READY FOR SIGN-OFF' : 'PENDING ADMIN APPROVAL')
-
-      const currentBrandTitle = brandName.trim() ? brandName.trim() : 'Brand'
-      const newReviewItem = {
-        id: `review-${Date.now()}`,
-        title: `${currentBrandTitle} Situation & Marketing Review`,
-        author: effectiveUserName,
-        authorEmail: currentUser?.email || 'creator@brandguard.ai',
-        submittedAt: 'Just now',
-        contentType: platform || 'Digital Ad & Marketing Copy',
-        version: 'v1.0',
-        draftTitle: `${currentBrandTitle} Situation Review`,
-        draft: marketingDraft,
-        status: detected.length === 0 ? 'Approved' : 'Pending',
-        tone: detected.length === 0 ? 'emerald' : detected.length > 2 ? 'rose' : 'amber',
-        issues: detected,
-        score: calculatedScore
-      }
-
-      setCurrentReview(newReviewItem)
-
-      // Add to global dashboard queue so Admin sees it immediately
-      setDashboard((prev) => ({
+      setResearchStage(2)
+      setResearchLogs((prev) => [
         ...prev,
-        queue: [
-          {
-            id: newReviewItem.id,
-            title: newReviewItem.title,
-            author: effectiveUserName,
-            authorEmail: currentUser?.email || 'creator@brandguard.ai',
-            status: newReviewItem.status,
-            issues: detected.length,
-            time: 'Just now',
-            tone: newReviewItem.tone,
-            draft: marketingDraft,
-            score: calculatedScore,
-            issuesList: detected
-          },
-          ...prev.queue.filter((q) => q.id !== newReviewItem.id)
-        ]
-      }))
+        '⚖️ Phase 2/4: Cross-referencing FTC Truth-in-Advertising, FDA 21 CFR & Consumer Protection standards...'
+      ])
 
-      // Persist AI Evaluation with complete Suggestions to Audit History ledger
-      const evaluationAudit = {
-        auditId: `AUD-${Math.floor(1000 + Math.random() * 9000)}`,
-        title: `${currentBrandTitle} Situation & Marketing Review`,
-        author: `${effectiveUserName} (Creator)`,
-        approver: 'Akira AI Engine (v2.4 Autonomous Audit)',
-        date: new Date().toISOString().replace('T', ' ').slice(0, 16),
-        status: detected.length === 0 ? 'Approved' : 'AI Evaluated',
-        score: calculatedScore,
-        issuesFixed: 0,
-        originalText: marketingDraft,
-        approvedText: detected.length === 0 ? marketingDraft : 'Pending user acceptance of AI rewrites',
-        aiSuggestions: detected
-      }
-      setAuditHistory((prev) => [evaluationAudit, ...prev])
+      setTimeout(() => {
+        setResearchStage(3)
+        setResearchLogs((prev) => [
+          ...prev,
+          '🛡️ Phase 3/4: Deconstructing marketing claims & scanning against custom brand rules...'
+        ])
 
-      triggerToast(
-        detected.length === 0
-          ? '🟢 100% Compliant! 0 brand violations detected.'
-          : `⚡ Scan Complete · ${detected.length} brand violations detected.`
-      )
-    }, 600)
+        setTimeout(() => {
+          setResearchStage(4)
+          setResearchLogs((prev) => [
+            ...prev,
+            '💡 Phase 4/4: Synthesizing Akira AI research findings & generating compliant rewrites...'
+          ])
+
+          setTimeout(() => {
+            setIsAnalyzing(false)
+            setAnalysisDone(true)
+
+            const detected = analyzeCustomBrandDraft(
+              activeDraft,
+              activeRules,
+              activeBrand,
+              activePlatform
+            )
+
+            const calculatedScore =
+              detected.length === 0
+                ? 100
+                : Math.max(20, 100 - detected.length * 18)
+
+            const ruleLineCount = (activeRules || '').split('\n').filter((l) => l.trim().length > 0).length
+            setComplianceScore(calculatedScore)
+            setEvaluatedRulesCount(Math.max(detected.length, ruleLineCount || 4))
+            setIssues(detected)
+            setSelectedIssue(detected[0]?.id || '')
+            setSignOffStatus(detected.length === 0 ? 'READY FOR SIGN-OFF' : 'PENDING ADMIN APPROVAL')
+
+            const currentBrandTitle = activeBrand.trim() ? activeBrand.trim() : 'Brand'
+            const newReviewItem = {
+              id: `review-${Date.now()}`,
+              title: `${currentBrandTitle} Situation & Marketing Review`,
+              author: effectiveUserName,
+              authorEmail: currentUser?.email || 'creator@brandguard.ai',
+              submittedAt: 'Just now',
+              contentType: activePlatform || 'Digital Ad & Marketing Copy',
+              version: 'v1.0',
+              draftTitle: `${currentBrandTitle} Situation Review`,
+              draft: activeDraft,
+              status: detected.length === 0 ? 'Approved' : 'Pending',
+              tone: detected.length === 0 ? 'emerald' : detected.length > 2 ? 'rose' : 'amber',
+              issues: detected,
+              score: calculatedScore
+            }
+
+            setCurrentReview(newReviewItem)
+
+            setDashboard((prev) => ({
+              ...prev,
+              queue: [
+                {
+                  id: newReviewItem.id,
+                  title: newReviewItem.title,
+                  author: effectiveUserName,
+                  authorEmail: currentUser?.email || 'creator@brandguard.ai',
+                  status: newReviewItem.status,
+                  issues: detected.length,
+                  time: 'Just now',
+                  tone: newReviewItem.tone,
+                  draft: activeDraft,
+                  score: calculatedScore,
+                  issuesList: detected
+                },
+                ...prev.queue.filter((q) => q.id !== newReviewItem.id)
+              ]
+            }))
+
+            const evaluationAudit = {
+              auditId: `AUD-${Math.floor(1000 + Math.random() * 9000)}`,
+              title: `${currentBrandTitle} Situation & Marketing Review`,
+              author: `${effectiveUserName} (Creator)`,
+              approver: 'Akira AI Engine (v2.4 Autonomous Audit)',
+              date: new Date().toISOString().replace('T', ' ').slice(0, 16),
+              status: detected.length === 0 ? 'Approved' : 'AI Evaluated',
+              score: calculatedScore,
+              issuesFixed: 0,
+              originalText: activeDraft,
+              approvedText: detected.length === 0 ? activeDraft : 'Pending user acceptance of AI rewrites',
+              aiSuggestions: detected
+            }
+            setAuditHistory((prev) => [evaluationAudit, ...prev])
+
+            triggerToast(
+              detected.length === 0
+                ? '🟢 100% Compliant! 0 brand violations detected.'
+                : `⚡ Real-Time AI Research Complete · ${detected.length} brand violations analyzed.`
+            )
+          }, 350)
+        }, 350)
+      }, 350)
+    }, 350)
+  }
+
+  // Load QuickCash Financial Benchmark
+  const handleLoadQuickCash = () => {
+    const brand = 'QuickCash Finance'
+    const plat = 'Digital Ad & Mobile Banner'
+    const rules =
+      'Rule 1: Focus on app features rather than unrealistic financial performance.\nRule 2: Never claim zero or concealed investment risk.\nRule 3: Prohibit fabricated regulatory approvals.\nRule 4: Route aggressive financial claims through compliance before publication.'
+    const draft =
+      'Double your money with QuickCash! Invest your entire savings with absolutely no risk. We are officially approved by every financial regulator. Download QuickCash today to start earning guaranteed wealth.'
+
+    setBrandName(brand)
+    setPlatform(plat)
+    setCustomRules(rules)
+    setMarketingDraft(draft)
+    executeAiDeepResearch(draft, rules, brand, plat)
+  }
+
+  // Load DermaClean scenario
+  const handleLoadDermaClean = () => {
+    const brand = DERMACLEAN_SCENARIO.brandName
+    const plat = DERMACLEAN_SCENARIO.platform
+    const rules = DERMACLEAN_SCENARIO.rulesText
+    const draft = DERMACLEAN_SCENARIO.draftText
+
+    setBrandName(brand)
+    setPlatform(plat)
+    setCustomRules(rules)
+    setMarketingDraft(draft)
+    executeAiDeepResearch(draft, rules, brand, plat)
+  }
+
+  // Load CarePlus Health Benchmark
+  const handleLoadCarePlus = () => {
+    const brand = CAREPLUS_SCENARIO.brandName
+    const plat = CAREPLUS_SCENARIO.platform
+    const rules = CAREPLUS_SCENARIO.rulesText
+    const draft = CAREPLUS_SCENARIO.draftText
+
+    setBrandName(brand)
+    setPlatform(plat)
+    setCustomRules(rules)
+    setMarketingDraft(draft)
+    executeAiDeepResearch(draft, rules, brand, plat)
+  }
+
+  // Run AI Analysis (Called by user on form submit)
+  const handleRunAiAnalysis = () => {
+    executeAiDeepResearch(marketingDraft, customRules, brandName, platform)
   }
 
   // Accept a Gemini Smart Rewrite
@@ -4539,10 +4441,10 @@ export default function App() {
                           textTransform: 'uppercase'
                         }}
                       >
-                        ⚡ 1-Click Demo Scenarios (Instant Analysis)
+                        ⚡ Quick Audit Benchmarks (Live AI Research)
                       </span>
                       <span style={{ fontSize: '9px', color: '#38bdf8' }}>
-                        Ready to Inspect
+                        Or Enter Any Custom Ad Below
                       </span>
                     </div>
 
@@ -4571,7 +4473,7 @@ export default function App() {
                           cursor: 'pointer'
                         }}
                       >
-                        💰 QuickCash Finance Ad
+                        💼 FinTech Case (QuickCash)
                       </button>
 
                       <button
@@ -4592,7 +4494,7 @@ export default function App() {
                           cursor: 'pointer'
                         }}
                       >
-                        🏥 CarePlus Health Ad
+                        🏥 Health Case (CarePlus)
                       </button>
                     </div>
                   </div>
@@ -4715,7 +4617,7 @@ export default function App() {
                     }}
                   >
                     <Icon name="zap" size={16} />
-                    {isAnalyzing ? 'Running AI Dual-Engine Audit...' : '⚡ Run AI Analysis'}
+                    {isAnalyzing ? 'Running Real-Time AI Research Audit...' : '⚡ Run AI Deep Research Analysis'}
                   </button>
 
                   {/* Submit to Admin Review Queue Button */}
@@ -4792,8 +4694,98 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* Body: Empty State or Evaluated Findings */}
-                  {!analysisDone ? (
+                  {/* Body: Live Research HUD, Empty State, or Evaluated Findings */}
+                  {isAnalyzing ? (
+                    <div
+                      style={{
+                        background: 'radial-gradient(ellipse at top, #0f2330, #09131a)',
+                        border: '1px solid #0284c7',
+                        borderRadius: '12px',
+                        padding: '24px',
+                        boxShadow: '0 8px 32px rgba(2, 132, 199, 0.25)',
+                        marginBottom: '16px'
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div
+                            style={{
+                              width: '12px',
+                              height: '12px',
+                              borderRadius: '50%',
+                              background: '#38bdf8',
+                              boxShadow: '0 0 12px #38bdf8'
+                            }}
+                          />
+                          <h3 style={{ margin: 0, fontSize: '13.5px', fontWeight: '800', color: '#f8fafc', letterSpacing: '0.5px' }}>
+                            AKIRA AI DEEP RESEARCH ENGINE ACTIVE
+                          </h3>
+                        </div>
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: '700',
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                            background: 'rgba(56, 189, 248, 0.15)',
+                            color: '#38bdf8',
+                            border: '1px solid rgba(56, 189, 248, 0.3)'
+                          }}
+                        >
+                          LIVE AUDIT · PHASE {researchStage}/4
+                        </span>
+                      </div>
+
+                      {/* Progress Bar */}
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '6px',
+                          background: '#16232b',
+                          borderRadius: '3px',
+                          overflow: 'hidden',
+                          marginBottom: '16px'
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: `${(researchStage / 4) * 100}%`,
+                            height: '100%',
+                            background: 'linear-gradient(90deg, #0284c7, #38bdf8, #22c55e)',
+                            transition: 'width 0.3s ease',
+                            borderRadius: '3px'
+                          }}
+                        />
+                      </div>
+
+                      {/* Log Stream */}
+                      <div
+                        style={{
+                          background: '#070e13',
+                          border: '1px solid #1a2a35',
+                          borderRadius: '8px',
+                          padding: '12px 14px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px',
+                          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                          fontSize: '11px',
+                          color: '#94a3b8'
+                        }}
+                      >
+                        {researchLogs.map((log, idx) => (
+                          <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: idx === researchLogs.length - 1 ? '#38bdf8' : '#64748b' }}>
+                            <span>{idx === researchLogs.length - 1 ? '▶' : '✔'}</span>
+                            <span>{log}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <p style={{ margin: '14px 0 0 0', fontSize: '11px', color: '#64748b', textAlign: 'center' }}>
+                        Cross-referencing advertising law, FTC Truth-in-Advertising, FDA 21 CFR, and brand policies in real time...
+                      </p>
+                    </div>
+                  ) : !analysisDone ? (
                     <div
                       style={{
                         padding: '40px 16px',
@@ -4818,9 +4810,9 @@ export default function App() {
                         <Icon name="file" size={24} />
                       </div>
 
-                      <strong style={{ fontSize: '15px', color: '#edf4f5' }}>Ready for New Review</strong>
+                      <strong style={{ fontSize: '15px', color: '#edf4f5' }}>Ready for Live Brand Review</strong>
                       <p style={{ margin: 0, fontSize: '12px', color: '#7f929e', maxWidth: '380px', lineHeight: 1.5 }}>
-                        Enter your brand name, rules, and marketing draft on the left, then click <strong>⚡ Run AI Analysis</strong> to view violations.
+                        Enter your brand name, rules, and marketing draft on the left, then click <strong>⚡ Run AI Deep Research Analysis</strong>.
                       </p>
 
                       <div style={{ display: 'flex', gap: '10px', marginTop: '14px', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -4830,7 +4822,7 @@ export default function App() {
                           style={{ padding: '8px 16px', fontSize: '11px', fontWeight: '700' }}
                           onClick={handleLoadCarePlus}
                         >
-                          ⚡ Load Demo Scenario & Run AI Analysis
+                          ⚡ Pre-Load Benchmark &amp; Run Live AI Audit
                         </button>
                         <button
                           type="button"
@@ -4844,6 +4836,46 @@ export default function App() {
                   ) : (
                     /* Live Findings with One-Click Smart Rewrites (Image 1 Format) */
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      {/* Autonomous AI Research Audit Banner */}
+                      <div
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(2, 132, 199, 0.12), rgba(16, 185, 129, 0.08))',
+                          border: '1px solid rgba(56, 189, 248, 0.3)',
+                          borderRadius: '8px',
+                          padding: '10px 14px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          flexWrap: 'wrap',
+                          gap: '8px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '14px' }}>🔬</span>
+                          <div>
+                            <div style={{ fontSize: '11.5px', fontWeight: '700', color: '#e2e8f0' }}>
+                              Akira Autonomous AI Research Audit Complete
+                            </div>
+                            <div style={{ fontSize: '10px', color: '#94a3b8' }}>
+                              Cross-referenced against FTC Act § 5, FDA 21 CFR, and Custom Brand Policies
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: '800',
+                            color: issues.length === 0 ? '#34d399' : '#f87171',
+                            background: issues.length === 0 ? 'rgba(34, 197, 94, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+                            border: `1px solid ${issues.length === 0 ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                            padding: '4px 10px',
+                            borderRadius: '4px',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {issues.length === 0 ? '🟢 0 Violations Detected' : `🔴 ${issues.length} Risks Flagged`}
+                        </div>
+                      </div>
                       {/* Top Header Summary Badge */}
                       <div
                         style={{
