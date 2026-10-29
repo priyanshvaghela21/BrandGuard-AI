@@ -3570,7 +3570,28 @@ export default function App() {
                       </thead>
                       <tbody>
                         {filteredQueue.map((item) => (
-                          <tr key={item.id || item.title}>
+                          <tr
+                          key={item.id || item.title}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => {
+                            setCurrentReview((prev) => ({
+                              ...prev,
+                              id: item.id,
+                              title: item.title,
+                              author: item.author,
+                              status: item.status,
+                              draft: item.draft || prev.draft,
+                              score: item.score || prev.score
+                            }))
+                            if (item.issuesList && item.issuesList.length > 0) {
+                              setIssues(item.issuesList)
+                              setSelectedIssue(item.issuesList[0]?.id || '')
+                            }
+                            setSignOffStatus(item.status === 'Approved' ? 'APPROVED' : item.status === 'Changes requested' ? 'CHANGES REQUESTED' : 'PENDING ADMIN APPROVAL')
+                            window.scrollTo({ top: 320, behavior: 'smooth' })
+                            triggerToast(`Loaded "${item.title}" into Review Workspace!`)
+                          }}
+                        >
                             <td>
                               <div className="content-cell">
                                 <div className="file-icon">
@@ -3954,7 +3975,28 @@ export default function App() {
                       </thead>
                       <tbody>
                         {filteredQueue.map((item) => (
-                          <tr key={item.id || item.title}>
+                          <tr
+                          key={item.id || item.title}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => {
+                            setCurrentReview((prev) => ({
+                              ...prev,
+                              id: item.id,
+                              title: item.title,
+                              author: item.author,
+                              status: item.status,
+                              draft: item.draft || prev.draft,
+                              score: item.score || prev.score
+                            }))
+                            if (item.issuesList && item.issuesList.length > 0) {
+                              setIssues(item.issuesList)
+                              setSelectedIssue(item.issuesList[0]?.id || '')
+                            }
+                            setSignOffStatus(item.status === 'Approved' ? 'APPROVED' : item.status === 'Changes requested' ? 'CHANGES REQUESTED' : 'PENDING ADMIN APPROVAL')
+                            window.scrollTo({ top: 320, behavior: 'smooth' })
+                            triggerToast(`Loaded "${item.title}" into Review Workspace!`)
+                          }}
+                        >
                             <td>
                               <div className="content-cell">
                                 <div className="file-icon" style={{ background: '#252115', color: '#e5b869' }}>
@@ -4201,7 +4243,28 @@ export default function App() {
                       <tbody>
                         {filteredClientSubmissions.length > 0 ? (
                           filteredClientSubmissions.map((item) => (
-                            <tr key={item.id || item.title}>
+                            <tr
+                          key={item.id || item.title}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => {
+                            setCurrentReview((prev) => ({
+                              ...prev,
+                              id: item.id,
+                              title: item.title,
+                              author: item.author,
+                              status: item.status,
+                              draft: item.draft || prev.draft,
+                              score: item.score || prev.score
+                            }))
+                            if (item.issuesList && item.issuesList.length > 0) {
+                              setIssues(item.issuesList)
+                              setSelectedIssue(item.issuesList[0]?.id || '')
+                            }
+                            setSignOffStatus(item.status === 'Approved' ? 'APPROVED' : item.status === 'Changes requested' ? 'CHANGES REQUESTED' : 'PENDING ADMIN APPROVAL')
+                            window.scrollTo({ top: 320, behavior: 'smooth' })
+                            triggerToast(`Loaded "${item.title}" into Review Workspace!`)
+                          }}
+                        >
                               <td>
                                 <div className="content-cell">
                                   <div className="file-icon" style={{ background: '#172733', color: 'var(--blue)' }}>
@@ -5783,8 +5846,15 @@ export default function App() {
                             title: sel.title,
                             author: sel.author,
                             submittedAt: sel.time,
-                            status: sel.status
+                            status: sel.status,
+                            draft: sel.draft || prev.draft,
+                            score: sel.score || prev.score
                           }))
+                          if (sel.issuesList && sel.issuesList.length > 0) {
+                            setIssues(sel.issuesList)
+                            setSelectedIssue(sel.issuesList[0]?.id || '')
+                          }
+                          setSignOffStatus(sel.status === 'Approved' ? 'APPROVED' : sel.status === 'Changes requested' ? 'CHANGES REQUESTED' : 'PENDING ADMIN APPROVAL')
                           triggerToast(`Switched active review to: ${sel.title}`)
                         }
                       }}
@@ -6120,11 +6190,11 @@ export default function App() {
 
                   <button
                     className="outline-button"
-                    disabled={currentRole !== 'brand_manager'}
+                    disabled={currentRole !== 'brand_manager' && currentRole !== 'admin' && currentUser?.portalType !== 'admin' && currentUser?.portalType !== 'manager'}
                     onClick={() => handleSignOff('approve')}
                   >
                     <Icon name="check" size={16} />
-                    {currentRole === 'brand_manager'
+                    {(currentRole === 'brand_manager' || currentRole === 'admin' || currentUser?.portalType === 'admin' || currentUser?.portalType === 'manager')
                       ? 'Sign-off & Approve'
                       : 'Approval restricted'}
                   </button>
@@ -6557,7 +6627,28 @@ export default function App() {
                     </thead>
                     <tbody>
                       {filteredQueue.map((item) => (
-                        <tr key={item.id || item.title}>
+                        <tr
+                          key={item.id || item.title}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => {
+                            setCurrentReview((prev) => ({
+                              ...prev,
+                              id: item.id,
+                              title: item.title,
+                              author: item.author,
+                              status: item.status,
+                              draft: item.draft || prev.draft,
+                              score: item.score || prev.score
+                            }))
+                            if (item.issuesList && item.issuesList.length > 0) {
+                              setIssues(item.issuesList)
+                              setSelectedIssue(item.issuesList[0]?.id || '')
+                            }
+                            setSignOffStatus(item.status === 'Approved' ? 'APPROVED' : item.status === 'Changes requested' ? 'CHANGES REQUESTED' : 'PENDING ADMIN APPROVAL')
+                            window.scrollTo({ top: 320, behavior: 'smooth' })
+                            triggerToast(`Loaded "${item.title}" into Review Workspace!`)
+                          }}
+                        >
                           <td>
                             <div className="content-cell">
                               <div className="file-icon">
@@ -7172,7 +7263,7 @@ export default function App() {
                 </p>
               </div>
 
-              {currentRole === 'brand_manager' && (
+              {(currentRole === 'brand_manager' || currentRole === 'admin') && (
                 <button className="primary-button" onClick={() => setShowAddRuleModal(true)}>
                   <Icon name="plus" size={17} /> Add Brand Rule
                 </button>
@@ -7964,10 +8055,14 @@ export default function App() {
                 triggerCount: 0
               }
               setRules((prev) => [ruleObj, ...prev])
+              setCustomRules((prev) => {
+                const line = `Rule ${rules.length + 1}: ${newRuleTitle} - ${newRuleDescription || 'Must adhere to brand policy'}`
+                return prev.trim() ? `${prev}\n${line}` : line
+              })
               setShowAddRuleModal(false)
               setNewRuleTitle('')
               setNewRuleDescription('')
-              triggerToast(`Rule ${ruleObj.id} created and committed to the brand rulebook!`)
+              triggerToast(`Rule ${ruleObj.id} created and committed to the active brand rulebook!`)
             }}
             onClick={(e) => e.stopPropagation()}
           >
