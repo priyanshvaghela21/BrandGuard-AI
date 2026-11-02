@@ -1589,6 +1589,15 @@ export default function App() {
 
   // User Profile & Governance Modal State (Image 1)
   const [showUserProfileModal, setShowUserProfileModal] = useState(false)
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [editProfileForm, setEditProfileForm] = useState({
+    name: '',
+    email: '',
+    organization: '',
+    jobTitle: '',
+    employeeId: '',
+    roleLabel: ''
+  })
 
   // Role-Specific Operations Guide Modal (Super Admin, Brand Manager, Content Creator, Workspace User)
   const [showRoleGuideModal, setShowRoleGuideModal] = useState(false)
@@ -3070,6 +3079,57 @@ export default function App() {
 
       triggerToast(`Welcome ${user.name}! ${user.ssoProvider ? `(${user.ssoProvider} SSO Verified) ` : ''}Creator Content Studio opened. ✍️`)
     }
+  }
+
+  // Open Profile Edit Form with current active details
+  const handleStartEditProfile = () => {
+    setEditProfileForm({
+      name: effectiveUserName || '',
+      email: currentUser?.email || (currentUser?.portalType === 'admin' ? 'admin@brandguard.ai' : currentUser?.portalType === 'manager' ? 'manager@brandguard.ai' : 'creator@brandguard.ai'),
+      organization: currentUser?.organization || (currentUser?.portalType === 'admin' ? 'Inkloom HQ' : currentUser?.portalType === 'manager' ? 'CarePlus Board' : 'Inkloom Creator Network'),
+      jobTitle: currentUser?.jobTitle || (currentUser?.portalType === 'admin' ? 'Chief Brand Compliance Officer' : currentUser?.portalType === 'manager' ? 'Brand Integrity Director' : 'Lead Creative Producer'),
+      employeeId: currentUser?.employeeId || (currentUser?.portalType === 'admin' ? 'BG-ADM-001' : currentUser?.portalType === 'manager' ? 'BG-MGR-042' : 'BG-CRT-108')
+    })
+    setIsEditingProfile(true)
+  }
+
+  // Save Updated Profile changes and persist across sessions
+  const handleSaveProfile = (e) => {
+    if (e) e.preventDefault()
+    if (!editProfileForm.name.trim()) {
+      triggerToast('Name cannot be empty!')
+      return
+    }
+
+    const updatedUser = {
+      ...(currentUser || {}),
+      name: editProfileForm.name.trim(),
+      email: editProfileForm.email.trim(),
+      organization: editProfileForm.organization.trim(),
+      jobTitle: editProfileForm.jobTitle.trim(),
+      employeeId: editProfileForm.employeeId.trim()
+    }
+
+    setCurrentUser(updatedUser)
+    setCurrentUserName(updatedUser.name)
+    localStorage.setItem('brandguard_auth_user', JSON.stringify(updatedUser))
+
+    // Update in loginSessions list as well
+    setLoginSessions((prev) =>
+      prev.map((s) =>
+        s.email === (currentUser?.email || updatedUser.email)
+          ? {
+              ...s,
+              name: updatedUser.name,
+              email: updatedUser.email,
+              organization: updatedUser.organization
+            }
+          : s
+      )
+    )
+
+    setIsEditingProfile(false)
+    triggerToast('Profile & Governance details updated successfully! ✅')
   }
 
   // Handle Logout
@@ -8665,150 +8725,353 @@ export default function App() {
             </div>
 
             {/* Profile Card Body (Inner Container matching Image 1) */}
-            <div
-              style={{
-                background: 'linear-gradient(180deg, #101c24 0%, #0c151c 100%)',
-                border: '1px solid #1f3644',
-                borderRadius: '12px',
-                padding: '20px',
-                boxShadow: '0 4px 16px rgba(0,0,0,0.25)'
-              }}
-            >
-              {/* User Avatar + Name + Role Header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                <div
-                  style={{
-                    width: '54px',
-                    height: '54px',
-                    borderRadius: '50%',
-                    background: 'var(--mint, #baf57f)',
-                    color: '#0d1813',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '18px',
-                    fontWeight: '900',
-                    flexShrink: 0,
-                    boxShadow: '0 0 20px rgba(186, 245, 127, 0.25)'
-                  }}
-                >
-                  {getUserInitials(effectiveUserName)}
-                </div>
-
-                <div style={{ minWidth: 0 }}>
-                  <h4
-                    style={{
-                      margin: 0,
-                      fontSize: '18px',
-                      fontWeight: '800',
-                      color: '#edf4f5',
-                      fontFamily: 'Manrope, sans-serif',
-                      letterSpacing: '-0.2px',
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {effectiveUserName}
-                  </h4>
-                  <span
-                    style={{
-                      display: 'block',
-                      marginTop: '3px',
-                      fontSize: '12px',
-                      fontWeight: '700',
-                      color: 'var(--mint, #baf57f)'
-                    }}
-                  >
-                    {currentUser?.portalType === 'admin'
-                      ? 'Super Admin (Full Governance)'
-                      : currentUser?.portalType === 'manager'
-                      ? 'Manager (Brand Manager)'
-                      : 'Creator (Author / Creator)'}
-                  </span>
-                </div>
-              </div>
-
-              {/* 2-Column Info Grid matching Image 1 */}
+            {!isEditingProfile ? (
               <div
                 style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '16px 14px',
-                  marginTop: '22px',
-                  paddingTop: '18px',
-                  borderTop: '1px solid #1a2e3a'
+                  background: 'linear-gradient(180deg, #101c24 0%, #0c151c 100%)',
+                  border: '1px solid #1f3644',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.25)'
                 }}
               >
-                <div>
-                  <span style={{ display: 'block', fontSize: '11px', color: '#728b97', marginBottom: '3px' }}>
-                    Work Email
-                  </span>
-                  <strong style={{ fontSize: '12px', color: '#edf4f5', wordBreak: 'break-all' }}>
-                    {currentUser?.email || (currentUser?.portalType === 'admin' ? 'admin@brandguard.ai' : currentUser?.portalType === 'manager' ? 'manager@brandguard.ai' : `${effectiveUserName.toLowerCase().replace(/\s+/g, '.')}@gmail.com`)}
-                  </strong>
+                {/* User Avatar + Name + Role Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div
+                      style={{
+                        width: '54px',
+                        height: '54px',
+                        borderRadius: '50%',
+                        background: 'var(--mint, #baf57f)',
+                        color: '#0d1813',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '18px',
+                        fontWeight: '900',
+                        flexShrink: 0,
+                        boxShadow: '0 0 20px rgba(186, 245, 127, 0.25)'
+                      }}
+                    >
+                      {getUserInitials(effectiveUserName)}
+                    </div>
+
+                    <div style={{ minWidth: 0 }}>
+                      <h4
+                        style={{
+                          margin: 0,
+                          fontSize: '18px',
+                          fontWeight: '800',
+                          color: '#edf4f5',
+                          fontFamily: 'Manrope, sans-serif',
+                          letterSpacing: '-0.2px',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis'
+                        }}
+                      >
+                        {effectiveUserName}
+                      </h4>
+                      <span
+                        style={{
+                          display: 'block',
+                          marginTop: '3px',
+                          fontSize: '12px',
+                          fontWeight: '700',
+                          color: 'var(--mint, #baf57f)'
+                        }}
+                      >
+                        {currentUser?.portalType === 'admin'
+                          ? 'Super Admin (Full Governance)'
+                          : currentUser?.portalType === 'manager'
+                          ? 'Manager (Brand Manager)'
+                          : 'Creator (Author / Creator)'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Edit Profile Button */}
+                  <button
+                    type="button"
+                    onClick={handleStartEditProfile}
+                    style={{
+                      background: 'rgba(56, 189, 248, 0.12)',
+                      border: '1px solid rgba(56, 189, 248, 0.35)',
+                      color: '#38bdf8',
+                      borderRadius: '8px',
+                      padding: '6px 12px',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      transition: '0.15s'
+                    }}
+                    title="Edit Profile Information"
+                  >
+                    ✏️ Edit Profile
+                  </button>
                 </div>
 
-                <div>
-                  <span style={{ display: 'block', fontSize: '11px', color: '#728b97', marginBottom: '3px' }}>
-                    Organization
-                  </span>
-                  <strong style={{ fontSize: '12px', color: '#edf4f5' }}>
-                    {currentUser?.organization || (currentUser?.portalType === 'admin' ? 'Inkloom HQ' : currentUser?.portalType === 'manager' ? 'CarePlus Board' : 'skinglow')}
-                  </strong>
-                </div>
-
-                <div>
-                  <span style={{ display: 'block', fontSize: '11px', color: '#728b97', marginBottom: '3px' }}>
-                    Job Title
-                  </span>
-                  <strong style={{ fontSize: '12px', color: '#edf4f5' }}>
-                    {currentUser?.jobTitle || (currentUser?.portalType === 'admin' ? 'Chief Brand Compliance Officer' : currentUser?.portalType === 'manager' ? 'Brand Integrity Director' : 'Lead Creative Producer')}
-                  </strong>
-                </div>
-
-                <div>
-                  <span style={{ display: 'block', fontSize: '11px', color: '#728b97', marginBottom: '3px' }}>
-                    Employee ID
-                  </span>
-                  <strong style={{ fontSize: '12px', color: '#edf4f5', fontFamily: 'monospace' }}>
-                    {currentUser?.employeeId || (currentUser?.portalType === 'admin' ? 'BG-ADM-001' : currentUser?.portalType === 'manager' ? 'BG-MGR-042' : 'CP-2196')}
-                  </strong>
-                </div>
-              </div>
-
-              {/* Assigned Access & Security Level (Strictly Enforced based on Sign-Up Role) */}
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #1a2e3a' }}>
-                <span style={{ display: 'block', fontSize: '11px', color: '#88a0ad', marginBottom: '8px' }}>
-                  Assigned Access &amp; Permissions:
-                </span>
-
+                {/* 2-Column Info Grid matching Image 1 */}
                 <div
                   style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '8px 12px',
-                    borderRadius: '8px',
-                    background: '#091319',
-                    border: '1px solid #1c323f'
+                    display: 'grid',
+                    gridTemplateColumns: '1fr 1fr',
+                    gap: '16px 14px',
+                    marginTop: '22px',
+                    paddingTop: '18px',
+                    borderTop: '1px solid #1a2e3a'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '14px' }}>
-                      {currentUser?.portalType === 'admin' ? '👑' : currentUser?.portalType === 'manager' ? '🛡️' : '✍️'}
+                  <div>
+                    <span style={{ display: 'block', fontSize: '11px', color: '#728b97', marginBottom: '3px' }}>
+                      Work Email
                     </span>
-                    <strong style={{ fontSize: '12px', color: '#edf4f5' }}>
-                      {currentUser?.roleLabel || (currentUser?.portalType === 'admin' ? 'Super Admin' : currentUser?.portalType === 'manager' ? 'Brand Manager' : 'Content Creator')}
+                    <strong style={{ fontSize: '12px', color: '#edf4f5', wordBreak: 'break-all' }}>
+                      {currentUser?.email || (currentUser?.portalType === 'admin' ? 'admin@brandguard.ai' : currentUser?.portalType === 'manager' ? 'manager@brandguard.ai' : `${effectiveUserName.toLowerCase().replace(/\s+/g, '.')}@gmail.com`)}
                     </strong>
                   </div>
 
-                  <span style={{ fontSize: '10px', color: 'var(--mint)', background: 'rgba(186, 245, 127, 0.12)', border: '1px solid rgba(186, 245, 127, 0.25)', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>
-                    Strictly Enforced (RBAC)
+                  <div>
+                    <span style={{ display: 'block', fontSize: '11px', color: '#728b97', marginBottom: '3px' }}>
+                      Organization
+                    </span>
+                    <strong style={{ fontSize: '12px', color: '#edf4f5' }}>
+                      {currentUser?.organization || (currentUser?.portalType === 'admin' ? 'Inkloom HQ' : currentUser?.portalType === 'manager' ? 'CarePlus Board' : 'skinglow')}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span style={{ display: 'block', fontSize: '11px', color: '#728b97', marginBottom: '3px' }}>
+                      Job Title
+                    </span>
+                    <strong style={{ fontSize: '12px', color: '#edf4f5' }}>
+                      {currentUser?.jobTitle || (currentUser?.portalType === 'admin' ? 'Chief Brand Compliance Officer' : currentUser?.portalType === 'manager' ? 'Brand Integrity Director' : 'Lead Creative Producer')}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span style={{ display: 'block', fontSize: '11px', color: '#728b97', marginBottom: '3px' }}>
+                      Employee ID
+                    </span>
+                    <strong style={{ fontSize: '12px', color: '#edf4f5', fontFamily: 'monospace' }}>
+                      {currentUser?.employeeId || (currentUser?.portalType === 'admin' ? 'BG-ADM-001' : currentUser?.portalType === 'manager' ? 'BG-MGR-042' : 'CP-2196')}
+                    </strong>
+                  </div>
+                </div>
+
+                {/* Assigned Access & Security Level (Strictly Enforced based on Sign-Up Role) */}
+                <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #1a2e3a' }}>
+                  <span style={{ display: 'block', fontSize: '11px', color: '#88a0ad', marginBottom: '8px' }}>
+                    Assigned Access &amp; Permissions:
                   </span>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      background: '#091319',
+                      border: '1px solid #1c323f'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '14px' }}>
+                        {currentUser?.portalType === 'admin' ? '👑' : currentUser?.portalType === 'manager' ? '🛡️' : '✍️'}
+                      </span>
+                      <strong style={{ fontSize: '12px', color: '#edf4f5' }}>
+                        {currentUser?.roleLabel || (currentUser?.portalType === 'admin' ? 'Super Admin' : currentUser?.portalType === 'manager' ? 'Brand Manager' : 'Content Creator')}
+                      </strong>
+                    </div>
+
+                    <span style={{ fontSize: '10px', color: 'var(--mint)', background: 'rgba(186, 245, 127, 0.12)', border: '1px solid rgba(186, 245, 127, 0.25)', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>
+                      Strictly Enforced (RBAC)
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : (
+              /* Editable Profile Form Mode */
+              <form
+                onSubmit={handleSaveProfile}
+                style={{
+                  background: 'linear-gradient(180deg, #101c24 0%, #0c151c 100%)',
+                  border: '1px solid #0284c7',
+                  borderRadius: '12px',
+                  padding: '20px',
+                  boxShadow: '0 4px 20px rgba(2, 132, 199, 0.25)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#38bdf8' }}>
+                    ✏️ Update Profile Information
+                  </h4>
+                  <span style={{ fontSize: '10px', color: '#728b97' }}>
+                    Changes save to local session &amp; server state
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {/* Full Name */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#88a0ad', marginBottom: '4px', fontWeight: '600' }}>
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={editProfileForm.name}
+                      onChange={(e) => setEditProfileForm((prev) => ({ ...prev, name: e.target.value }))}
+                      placeholder="e.g. Priyansh Vaghela"
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        background: '#091319',
+                        border: '1px solid #1c323f',
+                        borderRadius: '6px',
+                        color: '#edf4f5',
+                        fontSize: '12px',
+                        outline: 'none'
+                      }}
+                      required
+                    />
+                  </div>
+
+                  {/* Work Email */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#88a0ad', marginBottom: '4px', fontWeight: '600' }}>
+                      Work Email
+                    </label>
+                    <input
+                      type="email"
+                      value={editProfileForm.email}
+                      onChange={(e) => setEditProfileForm((prev) => ({ ...prev, email: e.target.value }))}
+                      placeholder="e.g. user@brandguard.ai"
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        background: '#091319',
+                        border: '1px solid #1c323f',
+                        borderRadius: '6px',
+                        color: '#edf4f5',
+                        fontSize: '12px',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+
+                  {/* Organization & Employee ID */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#88a0ad', marginBottom: '4px', fontWeight: '600' }}>
+                        Organization
+                      </label>
+                      <input
+                        type="text"
+                        value={editProfileForm.organization}
+                        onChange={(e) => setEditProfileForm((prev) => ({ ...prev, organization: e.target.value }))}
+                        placeholder="e.g. Inkloom HQ"
+                        style={{
+                          width: '100%',
+                          padding: '8px 10px',
+                          background: '#091319',
+                          border: '1px solid #1c323f',
+                          borderRadius: '6px',
+                          color: '#edf4f5',
+                          fontSize: '12px',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', color: '#88a0ad', marginBottom: '4px', fontWeight: '600' }}>
+                        Employee ID
+                      </label>
+                      <input
+                        type="text"
+                        value={editProfileForm.employeeId}
+                        onChange={(e) => setEditProfileForm((prev) => ({ ...prev, employeeId: e.target.value }))}
+                        placeholder="e.g. BG-ADM-001"
+                        style={{
+                          width: '100%',
+                          padding: '8px 10px',
+                          background: '#091319',
+                          border: '1px solid #1c323f',
+                          borderRadius: '6px',
+                          color: '#edf4f5',
+                          fontSize: '12px',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Job Title */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', color: '#88a0ad', marginBottom: '4px', fontWeight: '600' }}>
+                      Job Title
+                    </label>
+                    <input
+                      type="text"
+                      value={editProfileForm.jobTitle}
+                      onChange={(e) => setEditProfileForm((prev) => ({ ...prev, jobTitle: e.target.value }))}
+                      placeholder="e.g. Chief Brand Compliance Officer"
+                      style={{
+                        width: '100%',
+                        padding: '8px 10px',
+                        background: '#091319',
+                        border: '1px solid #1c323f',
+                        borderRadius: '6px',
+                        color: '#edf4f5',
+                        fontSize: '12px',
+                        outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Save and Cancel Buttons in Form */}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsEditingProfile(false)}
+                    style={{
+                      padding: '8px 14px',
+                      borderRadius: '6px',
+                      border: '1px solid #233b49',
+                      background: '#152531',
+                      color: '#cbd5e1',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: '#0284c7',
+                      color: '#ffffff',
+                      fontSize: '12px',
+                      fontWeight: '700',
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 10px rgba(2, 132, 199, 0.4)'
+                    }}
+                  >
+                    💾 Save Changes
+                  </button>
+                </div>
+              </form>
+            )}
 
             {/* Action Buttons: Sign Out vs Close matching Image 1 */}
             <div
@@ -8846,7 +9109,10 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => setShowUserProfileModal(false)}
+                onClick={() => {
+                  setIsEditingProfile(false)
+                  setShowUserProfileModal(false)
+                }}
                 style={{
                   padding: '12px',
                   borderRadius: '8px',
