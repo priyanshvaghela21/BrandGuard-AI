@@ -1,3 +1,4 @@
+import WebhookDeliveryArchitecture from './WebhookDeliveryArchitecture'
 import React, { useState, useEffect } from 'react'
 
 // Platform Icons
@@ -410,6 +411,46 @@ export default function IntegrationsDashboard({
 
           <button
             type="button"
+            onClick={() => setActiveTab('architecture')}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '6px',
+              border: 'none',
+              background: activeTab === 'architecture' ? '#1c2f3d' : 'transparent',
+              color: activeTab === 'architecture' ? '#38bdf8' : '#88a0ad',
+              fontSize: '12px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🏗️</span> Delivery Architecture
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('endpoints')}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '6px',
+              border: 'none',
+              background: activeTab === 'endpoints' ? '#1c2f3d' : 'transparent',
+              color: activeTab === 'endpoints' ? '#38bdf8' : '#88a0ad',
+              fontSize: '12px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🌐</span> Customer UI
+          </button>
+
+          <button
+            type="button"
             onClick={() => setActiveTab('simulator')}
             style={{
               padding: '8px 14px',
@@ -698,6 +739,16 @@ export default function IntegrationsDashboard({
             </button>
           </div>
         </div>
+      )}
+
+      {/* TAB: WEBHOOK DELIVERY ARCHITECTURE (From Diagram) */}
+      {(activeTab === 'architecture' || activeTab === 'endpoints') && (
+        <WebhookDeliveryArchitecture
+          currentUser={currentUser}
+          onShowToast={showToast}
+          onNavigateToQueue={onNavigateToQueue}
+          initialTab={activeTab === 'endpoints' ? 'endpoints' : 'diagram'}
+        />
       )}
 
       {/* TAB 2: WEBHOOK SIMULATOR */}

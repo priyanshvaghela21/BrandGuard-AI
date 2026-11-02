@@ -3320,3 +3320,187 @@ def api_get_webhook_logs(limit: int = 50, source: Optional[str] = None):
             return {"success": True, "count": len(logs), "logs": logs}
     except Exception as e:
         return {"success": False, "count": 0, "logs": [], "error": str(e)}
+
+
+# ==================================================
+# WEBHOOK DELIVERY ARCHITECTURE (VPC, Task Queue, Workers, Endpoints)
+# ==================================================
+
+class OutboundEndpointPayload(BaseModel):
+    name: str = Field(..., description="Display name for the customer endpoint")
+    url: str = Field(..., description="Destination webhook URL")
+    secret_key: Optional[str] = Field(default=None, description="Custom secret key for HMAC signature")
+    events: Optional[List[str]] = Field(default=["review.approved", "review.rejected"], description="Subscribed events")
+
+class DispatchTestPayload(BaseModel):
+    endpoint_id: Optional[str] = Field(default="ep_default_1", description="Target customer endpoint ID")
+    event_type: str = Field(default="review.approved", description="Event to dispatch")
+    payload: Optional[dict] = Field(default=None, description="Custom payload data")
+    simulate_retry: Optional[bool] = Field(default=False, description="Simulate retry on transient failure")
+
+# Default in-memory / persistent endpoints
+DEFAULT_OUTBOUND_ENDPOINTS = [
+    {
+        "id": "ep_cms_prod",
+        "name": "CarePlus Headless CMS (Prod)",
+        "url": "https://cms.careplushealth.com/api/v1/brandguard-webhook",
+        "secret_key": "whsec_prod_8f11a82b99",
+        "events": ["review.approved", "review.rejected", "content.updated"],
+        "status": "healthy",
+        "last_status_code": 200,
+        "last_latency_ms": 38,
+        "last_attempt_at": "Just now",
+        "failure_count": 0,
+        "created_at": "2026-11-01T10:00:00Z"
+    },
+    {
+        "id": "ep_slack_alerts",
+        "name": "Marketing Slack Bot (#brand-governance)",
+        "url": "https://hooks.slack.com/services/T04G/B082/brandguard-notifications",
+        "secret_key": "whsec_slack_c991f24d",
+        "events": ["review.approved", "review.rejected", "compliance.flagged"],
+        "status": "healthy",
+        "last_status_code": 200,
+        "last_latency_ms": 54,
+        "last_attempt_at": "14m ago",
+        "failure_count": 0,
+        "created_at": "2026-11-01T12:30:00Z"
+    },
+    {
+        "id": "ep_meta_agency",
+        "name": "Ad Agency Meta Dispatch Proxy",
+        "url": "https://api.meta-agency.internal/v2/creative-approval-webhook",
+        "secret_key": "whsec_agency_77a23b10",
+        "events": ["review.approved"],
+        "status": "requeueing",
+        "last_status_code": 503,
+        "last_latency_ms": 120,
+        "last_attempt_at": "2m ago",
+        "failure_count": 1,
+        "created_at": "2026-11-02T08:15:00Z"
+    }
+]
+
+@app.get("/api/webhooks/outbound-endpoints")
+def api_get_outbound_endpoints():
+    '''Returns configured customer destination endpoints for outbound webhook delivery.'''
+    return {"success": True, "endpoints": DEFAULT_OUTBOUND_ENDPOINTS}
+
+@app.post("/api/webhooks/outbound-endpoints")
+def api_create_outbound_endpoint(payload: OutboundEndpointPayload):
+    '''Customer UI endpoint registration: add a new customer destination webhook.'''
+    new_ep = {
+        "id": f"ep_{int(time.time())}_{uuid.uuid4().hex[:6]}",
+        "name": payload.name.strip(),
+        "url": payload.url.strip(),
+        "secret_key": payload.secret_key.strip() if payload.secret_key else f"whsec_{uuid.uuid4().hex[:16]}",
+        "events": payload.events or ["review.approved", "review.rejected"],
+        "status": "healthy",
+        "last_status_code": 200,
+        "last_latency_ms": 42,
+        "last_attempt_at": "Never tested",
+        "failure_count": 0,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+    DEFAULT_OUTBOUND_ENDPOINTS.insert(0, new_ep)
+    return {"success": True, "endpoint": new_ep}
+
+@app.delete("/api/webhooks/outbound-endpoints/{endpoint_id}")
+def api_delete_outbound_endpoint(endpoint_id: str):
+    '''Customer UI endpoint removal.'''
+    global DEFAULT_OUTBOUND_ENDPOINTS
+    DEFAULT_OUTBOUND_ENDPOINTS = [e for e in DEFAULT_OUTBOUND_ENDPOINTS if e["id"] != endpoint_id]
+    return {"success": True, "deleted_id": endpoint_id}
+
+@app.post("/api/webhooks/dispatch-test")
+def api_test_webhook_delivery_architecture(payload: DispatchTestPayload):
+    '''
+    Simulates the full Webhook Delivery Architecture:
+    1. API Ingestion & WAF / Load Balancer
+    2. Webhook Delivery Service (VPC)
+    3. Storage Layer & Redis Idempotency Cache
+    4. Task Queue (Celery/SQS)
+    5. Webhook Dispatch Worker (HMAC per-endpoint key signing)
+    6. Requeue & Retry on failure
+    7. Outbound Delivery to Customer Endpoints via VPC Peering
+    '''
+    ep = next((e for e in DEFAULT_OUTBOUND_ENDPOINTS if e["id"] == payload.endpoint_id), DEFAULT_OUTBOUND_ENDPOINTS[0])
+    task_id = f"tsk_{uuid.uuid4().hex[:10]}"
+    dispatch_worker_id = f"worker-{random.randint(1, 4)}"
+    
+    # Calculate unique HMAC SHA-256 signature using that specific endpoint key
+    secret = ep.get("secret_key", "whsec_default")
+    sample_body = json.dumps(payload.payload or {
+        "event": payload.event_type,
+        "review_id": f"REV-{random.randint(100, 999)}",
+        "campaign": "CarePlus Health Promo",
+        "compliance_score": 92,
+        "status": "Approved",
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }, sort_keys=True)
+    
+    computed_sig = hmac.new(secret.encode("utf-8"), sample_body.encode("utf-8"), hashlib.sha256).hexdigest()
+    
+    trace_steps = [
+        {
+            "step": 1,
+            "name": "Load Balancer and WAF",
+            "status": "Passed",
+            "detail": "AWS ALB TLS 1.3 termination, WAF rate limit verified (32 req/sec), zero anomalies detected.",
+            "latency_ms": 1.2
+        },
+        {
+            "step": 2,
+            "name": "Webhook Delivery Service (VPC)",
+            "status": "Accepted",
+            "detail": f"Payload validated against JSONSchema. Generated Event ID ev_{uuid.uuid4().hex[:8]}.",
+            "latency_ms": 3.4
+        },
+        {
+            "step": 3,
+            "name": "Storage Layer & Redis Cache",
+            "status": "Persisted",
+            "detail": "Deduplication key set in Redis (TTL: 86400s). Status logged to DB table webhook_events.",
+            "latency_ms": 4.1
+        },
+        {
+            "step": 4,
+            "name": "Task Queue (Celery / AWS SQS)",
+            "status": "Queued",
+            "detail": f"Dispatched into FIFO queue with priority P1. Assigned Task ID: {task_id}.",
+            "latency_ms": 2.8
+        },
+        {
+            "step": 5,
+            "name": "Webhook Dispatch Worker",
+            "status": "Signed",
+            "detail": f"{dispatch_worker_id} picked up task. Signed HTTP headers using endpoint secret ({secret[:12]}...). Signature: sha256={computed_sig[:16]}...",
+            "latency_ms": 6.5
+        },
+        {
+            "step": 6,
+            "name": "VPC Peering & Outgoing Proxy",
+            "status": "Routed",
+            "detail": "Traffic routed through NAT Gateway (Static IP 198.51.100.24) to isolate VPC from public internet.",
+            "latency_ms": 8.9
+        },
+        {
+            "step": 7,
+            "name": "Customer Endpoint Delivery",
+            "status": "Delivered 200 OK" if not payload.simulate_retry else "Transient 503 Requeued",
+            "detail": f"POST {ep.get('url')} returned HTTP 200 OK in 38ms." if not payload.simulate_retry else f"POST {ep.get('url')} returned 503 Service Unavailable. Worker scheduled exponential backoff retry (Attempt 2/3 in 15s).",
+            "latency_ms": 38.0 if not payload.simulate_retry else 15.0
+        }
+    ]
+    
+    total_latency = sum(s["latency_ms"] for s in trace_steps)
+    
+    return {
+        "success": True,
+        "task_id": task_id,
+        "endpoint": ep,
+        "signature": f"sha256={computed_sig}",
+        "total_latency_ms": round(total_latency, 1),
+        "delivery_status": "DELIVERED_200_OK" if not payload.simulate_retry else "RETRY_REQUEUED",
+        "trace_steps": trace_steps
+    }
