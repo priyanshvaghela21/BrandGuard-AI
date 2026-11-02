@@ -45,7 +45,7 @@ export const INITIAL_PALETTE = [
 ];
 
 export const DEMO_SCENARIO = {
-  title: "CarePlus Health-tech Diwali Banner 2026",
+  title: "Corporate Healthcare Diwali Campaign 2026",
   campaign: "Diwali Festive Health Campaign",
   draftText: "Our healthcare policy guarantees 100% cure for all illnesses with zero fees! Don't miss out on this miraculous treatment for every user.",
   bannerImageUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=800&auto=format&fit=crop&q=60",

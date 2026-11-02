@@ -17,7 +17,7 @@ start "BrandGuard Backend (FastAPI)" cmd /k "cd backend && python run.py"
 timeout /t 2 /nobreak >nul
 
 echo [*] Starting Frontend Vite Server on http://127.0.0.1:5173 ...
-start "BrandGuard Frontend (Vite)" cmd /k "npm run dev -- --host 127.0.0.1 --port 5173"
+start "BrandGuard Frontend (Vite)" cmd /k "cd frontend && npm run dev -- --host 127.0.0.1 --port 5173"
 
 timeout /t 2 /nobreak >nul
 

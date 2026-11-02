@@ -7,7 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+node_modules/
 dist
 dist-ssr
 frontend/node_modules/
@@ -32,6 +32,15 @@ __pycache__/
 backend/__pycache__/
 backend/app/**/__pycache__/
 .env
+backend/.env*
 
-# Backups
+# Backups and temporary files
 src_backup/
+*backup*
+*.patch
+backend_modular/
+update_logos.py
+frontend/src_backup_pre_round3/
+backend/main copy.py
+backend/main_before*.py
+backend/migrate_reviews.py
