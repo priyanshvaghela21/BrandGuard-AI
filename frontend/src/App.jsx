@@ -3683,6 +3683,65 @@ export default function App() {
                 </button>
               </section>
 
+              {/* Enterprise Integrations & Automation Hub Banner on Admin Overview */}
+              <section style={{ width: 'min(1240px, 91%)', margin: '0 auto 20px' }}>
+                <div
+                  style={{
+                    background: 'linear-gradient(135deg, #0e1c26 0%, #101c24 100%)',
+                    border: '1px solid #1e3545',
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '14px',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                    <div
+                      style={{
+                        width: '42px',
+                        height: '42px',
+                        borderRadius: '10px',
+                        background: 'rgba(186, 245, 127, 0.12)',
+                        border: '1px solid rgba(186, 245, 127, 0.3)',
+                        display: 'grid',
+                        placeItems: 'center',
+                        color: 'var(--mint)'
+                      }}
+                    >
+                      <Icon name="globe" size={22} />
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <strong style={{ fontSize: '14px', color: '#edf4f5', letterSpacing: '-0.2px' }}>
+                          Enterprise CMS &amp; Design Tool Webhooks
+                        </strong>
+                        <span style={{ fontSize: '10px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.3)', padding: '1px 7px', borderRadius: '4px', fontWeight: '700' }}>
+                          5 Platforms Connected
+                        </span>
+                      </div>
+                      <p style={{ margin: '3px 0 0', fontSize: '12px', color: '#829ca9' }}>
+                        Automated compliance ingestion active for <strong>Figma</strong>, <strong>Canva</strong>, <strong>Slack</strong>, <strong>Meta Ads</strong>, and <strong>Generic Webhooks</strong>.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <button
+                      type="button"
+                      className="primary-button"
+                      style={{ padding: '8px 16px', fontSize: '11px', fontWeight: '800' }}
+                      onClick={() => setActiveNav('Integrations & Automation')}
+                    >
+                      Open Integrations &amp; Automation Hub →
+                    </button>
+                  </div>
+                </div>
+              </section>
+
               {/* 4 Admin Metric Cards */}
               <section className="metric-grid">
                 <div className="metric-card">
@@ -6154,7 +6213,7 @@ export default function App() {
         )}
 
         {/* ── FEATURE: ENTERPRISE CMS & DESIGN TOOL WEBHOOKS (Figma, Canva, Slack, Meta Ads, Generic) ── */}
-        {activeNav === 'Integrations & Automation' && (
+        {(activeNav === 'Integrations & Automation' || activeNav === 'Integrations' || activeNav === 'Integrations & automation') && (
           <IntegrationsDashboard
             currentUser={currentUser}
             currentRole={currentRole}

@@ -127,10 +127,14 @@ export default function IntegrationsDashboard({
   const [integrations, setIntegrations] = useState(() => {
     try {
       const saved = localStorage.getItem('brandguard_integrations_list')
-      return saved ? JSON.parse(saved) : DEFAULT_INTEGRATIONS
-    } catch (e) {
-      return DEFAULT_INTEGRATIONS
-    }
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length >= 5) {
+          return parsed
+        }
+      }
+    } catch (e) {}
+    return DEFAULT_INTEGRATIONS
   })
 
   // Selected Integration for Config / Logs Modal
@@ -263,7 +267,10 @@ export default function IntegrationsDashboard({
     let resultData = null
 
     try {
-      const resp = await fetch('http://127.0.0.1:8000/api/webhooks/brand-review', {
+      const endpoint = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+        ? 'http://127.0.0.1:8000/api/webhooks/brand-review'
+        : '/api/webhooks/brand-review'
+      const resp = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
