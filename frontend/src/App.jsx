@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti'
 import AkiraWorkflowPipeline from './components/AkiraWorkflowPipeline'
 import PdfBrochureScanner from './components/PdfBrochureScanner'
 import BenchmarkEvaluationSuite from './components/analytics/BenchmarkEvaluationSuite'
+import IntegrationsAutomationHub from './components/integrations/IntegrationsAutomationHub'
 import { BENCHMARK_50_CREATIVES } from './data/benchmark50Dataset'
 import {
   seededDashboard,
@@ -3318,6 +3319,7 @@ export default function App() {
                 ['Review queue', 'inbox', dashboard.queue.filter((q) => q.status !== 'Approved').length || 3],
                 ['Benchmark Suite', 'chart', '50'],
                 ['Akira AI Pipeline', 'zap', 'v2.4'],
+                ['Integrations & Automation', 'globe', 5],
                 ['Audit history', 'clock', auditHistory.length],
                 ['User logins', 'user', loginSessions.filter((s) => s.status === 'Online').length],
                 ['Rulebook', 'book', rules.length],
@@ -3357,6 +3359,7 @@ export default function App() {
                 ['Review queue', 'inbox', dashboard.queue.filter((q) => q.status !== 'Approved').length || 3],
                 ['Benchmark Suite', 'chart', '50'],
                 ['Akira AI Pipeline', 'zap', 'v2.4'],
+                ['Integrations & Automation', 'globe', 5],
                 ['Rulebook', 'book', rules.length],
                 ['Audit history', 'clock', auditHistory.length],
                 ['Insights', 'chart', null]
@@ -3394,6 +3397,7 @@ export default function App() {
                 ['New review', 'sparkle', null],
                 ['Benchmark Suite', 'chart', '50'],
                 ['Akira AI Pipeline', 'zap', 'v2.4'],
+                ['Integrations & Automation', 'globe', 5],
                 ['My submissions', 'file', clientSubmissions.length],
                 ['Brand guidelines', 'book', null]
               ].map(([label, icon, count]) => {
@@ -6071,6 +6075,37 @@ export default function App() {
               currentRole={currentRole}
               onNavigateToQueue={() => setActiveNav('Review queue')}
               onNavigateToNewReview={() => setActiveNav('New review')}
+            />
+          </section>
+        )}
+
+        {/* ── Integrations & Automation Hub ── */}
+        {activeNav === 'Integrations & Automation' && (
+          <section style={{ width: 'min(1240px, 91%)', margin: '20px auto 40px' }}>
+            <IntegrationsAutomationHub
+              currentUser={currentUser}
+              currentRole={currentRole}
+              onNavigateToQueue={() => setActiveNav('Review queue')}
+              onNavigateToAudit={() => setActiveNav('Audit history')}
+              onTriggerWebhook={(item) => {
+                const qItem = {
+                  id: item.event_id || `wh_${Date.now()}`,
+                  title: item.content_title || 'Inbound Webhook Creative',
+                  campaign: item.campaign_name || 'Automated Webhook Ingestion',
+                  author: item.creator_name || 'Webhook Ingestion Service',
+                  authorEmail: item.creator_email || 'bot@brandguard.ai',
+                  submittedAt: 'Just now',
+                  status: 'In review',
+                  riskScore: 82,
+                  findings: 3,
+                  brand: item.organization_id || 'CarePlus Health',
+                  source: (item.source || 'WEBHOOK').toUpperCase(),
+                  content: item.content_text,
+                  assetUrl: item.content_url
+                }
+                handleAddQueueItem(qItem)
+                return { status: 'Enqueued', riskScore: 82, findings: 3 }
+              }}
             />
           </section>
         )}
