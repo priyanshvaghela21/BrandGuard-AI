@@ -180,7 +180,7 @@ def init_db():
 
                 """))
 
-                for col_name in ["username", "status", "custom_rules_json", "rule_results_json", "compliance_score", "signed_off_by", "signed_off_at"]:
+                for col_name in ["reviewed_at", "brand_name", "platform", "content", "risk_level", "category", "ai_enabled", "ai_summary", "suggested_content", "message", "username", "status", "custom_rules_json", "rule_results_json", "compliance_score", "signed_off_by", "signed_off_at"]:
 
                     try:
 
@@ -258,6 +258,28 @@ def init_db():
 
                 connection.execute(text("""
 
+                    CREATE TABLE IF NOT EXISTS webhook_events (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        event_id TEXT UNIQUE,
+                        source TEXT,
+                        event_type TEXT,
+                        campaign_name TEXT,
+                        content_title TEXT,
+                        content_text TEXT,
+                        content_url TEXT,
+                        organization_id TEXT,
+                        creator_name TEXT,
+                        status TEXT DEFAULT 'processed',
+                        compliance_score INTEGER DEFAULT 85,
+                        risk_level TEXT DEFAULT 'medium',
+                        review_id INTEGER,
+                        created_at TEXT,
+                        payload_json TEXT DEFAULT '{}',
+                        result_json TEXT DEFAULT '{}'
+                    )
+                """))
+
+                connection.execute(text("""
                     CREATE TABLE IF NOT EXISTS users (
 
                         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -288,6 +310,28 @@ def init_db():
 
                 connection.execute(text("""
 
+                    CREATE TABLE IF NOT EXISTS webhook_events (
+                        id SERIAL PRIMARY KEY,
+                        event_id VARCHAR(150) UNIQUE,
+                        source VARCHAR(50),
+                        event_type VARCHAR(80),
+                        campaign_name VARCHAR(200),
+                        content_title VARCHAR(250),
+                        content_text TEXT,
+                        content_url TEXT,
+                        organization_id VARCHAR(100),
+                        creator_name VARCHAR(100),
+                        status VARCHAR(50) DEFAULT 'processed',
+                        compliance_score INTEGER DEFAULT 85,
+                        risk_level VARCHAR(30) DEFAULT 'medium',
+                        review_id INTEGER,
+                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+                        payload_json JSONB DEFAULT '{}'::jsonb,
+                        result_json JSONB DEFAULT '{}'::jsonb
+                    )
+                """))
+
+                connection.execute(text("""
                     CREATE TABLE IF NOT EXISTS users (
 
                         id SERIAL PRIMARY KEY,
@@ -386,7 +430,7 @@ def save_review_safe(username, brand_name, platform, content, risk_level, ai_sum
 
                     INSERT INTO reviews (
 
-                        reviewed_at, username, brand_name, platform, content,
+                        id, reviewed_at, username, brand_name, platform, content,
 
                         risk_level, status, category, issues_json, ai_enabled,
 
@@ -398,7 +442,7 @@ def save_review_safe(username, brand_name, platform, content, risk_level, ai_sum
 
                     VALUES (
 
-                        CURRENT_TIMESTAMP, :username, :brand_name, :platform, :content,
+                        :id, CURRENT_TIMESTAMP, :username, :brand_name, :platform, :content,
 
                         :risk_level, 'in_review', 'custom_rule_review', CAST(:issues_json AS jsonb),
 
@@ -412,7 +456,19 @@ def save_review_safe(username, brand_name, platform, content, risk_level, ai_sum
 
                 """)
 
-                new_id = conn.execute(q, {
+                new_id = max_id = conn.execute(text("SELECT COALESCE(MAX(id), 0) + 1 FROM reviews")).scalar() or 1
+
+                conn.execute(q, {
+
+                    "id": max_id,
+
+                    "title": f"{brand_name} {platform} Ad Creative",
+
+                    "author": username or "Priyansh",
+
+                    "author_email": f"{(username or 'priyansh').lower().replace(' ', '.')}@brandguard.ai",
+
+                    "draft": content,
 
                     "username": username or "Priyansh",
 
@@ -444,7 +500,7 @@ def save_review_safe(username, brand_name, platform, content, risk_level, ai_sum
 
                     INSERT INTO reviews (
 
-                        reviewed_at, username, brand_name, platform, content,
+                        id, title, author, author_email, draft, reviewed_at, username, brand_name, platform, content,
 
                         risk_level, status, category, issues_json, ai_enabled,
 
@@ -456,7 +512,7 @@ def save_review_safe(username, brand_name, platform, content, risk_level, ai_sum
 
                     VALUES (
 
-                        CURRENT_TIMESTAMP, :username, :brand_name, :platform, :content,
+                        :id, :title, :author, :author_email, :draft, CURRENT_TIMESTAMP, :username, :brand_name, :platform, :content,
 
                         :risk_level, 'in_review', 'custom_rule_review', :issues_json,
 
@@ -468,7 +524,19 @@ def save_review_safe(username, brand_name, platform, content, risk_level, ai_sum
 
                 """)
 
+                max_id = conn.execute(text("SELECT COALESCE(MAX(id), 0) + 1 FROM reviews")).scalar() or 1
+
                 conn.execute(q, {
+
+                    "id": max_id,
+
+                    "title": f"{brand_name} {platform} Ad Creative",
+
+                    "author": username or "Priyansh",
+
+                    "author_email": f"{(username or 'priyansh').lower().replace(' ', '.')}@brandguard.ai",
+
+                    "draft": content,
 
                     "username": username or "Priyansh",
 
@@ -2975,3 +3043,280 @@ def api_download_remediated_pdf(payload: DownloadPdfRequest):
             "Access-Control-Expose-Headers": "Content-Disposition"
         }
     )
+
+
+# ==================================================
+# ENTERPRISE CMS & DESIGN TOOL WEBHOOKS
+# ==================================================
+
+class WebhookBrandReviewPayload(BaseModel):
+    event_id: str = Field(..., description="Unique event ID for deduplication and idempotency")
+    source: str = Field(default="generic", description="Figma, Canva, Slack, Meta Ads, Generic")
+    event_type: str = Field(default="content.submitted", description="Event type name")
+    simulation: bool = Field(default=False, description="Simulation mode indicator")
+    campaign_name: Optional[str] = "Campaign Review"
+    content_title: str = Field(..., min_length=1, max_length=500)
+    content_text: str = Field(..., min_length=1, max_length=20000)
+    content_url: Optional[str] = None
+    organization_id: Optional[str] = "BrandGuard HQ"
+    creator_name: Optional[str] = "External System"
+    creator_email: Optional[str] = "integrations@brandguard.ai"
+    timestamp: Optional[str] = None
+
+
+@app.post("/api/webhooks/brand-review")
+def api_webhook_brand_review(payload: WebhookBrandReviewPayload, request: Request):
+    """
+    Enterprise Webhook Ingestion API:
+    Accepts marketing content from Figma, Canva, Slack, Meta Ads, or Generic Webhooks.
+    Validates payload, enforces idempotency, evaluates against BrandGuard rules,
+    persists the audit in review queue and webhook_events, and returns compliance score.
+    """
+    event_id = payload.event_id.strip()
+    source = payload.source.strip().lower()
+    event_type = payload.event_type.strip()
+    content_text = payload.content_text.strip()
+    content_title = payload.content_title.strip()
+    campaign_name = (payload.campaign_name or "Campaign").strip()
+    org_id = (payload.organization_id or "BrandGuard HQ").strip()
+    creator = (payload.creator_name or "External Integrator").strip()
+
+    # 1. Validation of payload limits & event types
+    valid_events = {
+        "content.submitted", "content.updated", "campaign.review_requested",
+        "frame.review_requested", "message.audit_requested"
+    }
+    if event_type not in valid_events:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unsupported event_type '{event_type}'. Valid: {list(valid_events)}"
+        )
+
+    if len(content_text) > 20000:
+        raise HTTPException(status_code=413, detail="Payload content_text exceeds 20,000 character limit.")
+
+    # 2. Signature verification / Authentication
+    sig_header = request.headers.get("X-BrandGuard-Signature") or request.headers.get("x-brandguard-signature")
+    auth_header = request.headers.get("Authorization")
+    
+    # In non-simulation mode, check for required authentication header
+    if not payload.simulation and not sig_header and not auth_header:
+        raise HTTPException(
+            status_code=401,
+            detail="Missing X-BrandGuard-Signature or Authorization header for live webhook integration."
+        )
+
+    # 3. Idempotency Check: Prevent duplicate processing
+    try:
+        with engine.begin() as conn:
+            existing = conn.execute(
+                text("SELECT event_id, status, compliance_score, review_id, result_json FROM webhook_events WHERE event_id = :eid"),
+                {"eid": event_id}
+            ).fetchone()
+
+            if existing:
+                cached_res = {}
+                try:
+                    cached_res = json.loads(existing[4]) if isinstance(existing[4], str) else existing[4]
+                except Exception:
+                    pass
+                return {
+                    "success": True,
+                    "event_id": event_id,
+                    "status": "already_processed",
+                    "idempotent": True,
+                    "message": "Duplicate event ignored via idempotency check.",
+                    "review_id": existing[3],
+                    "compliance": cached_res
+                }
+    except Exception as e:
+        print(f"[Webhook DB Check Error] {e}")
+
+    # 4. Brand & Channel inference
+    brand_name = org_id if org_id and org_id != "BrandGuard HQ" else "CarePlus Health"
+    platform_label = {
+        "figma": "Figma Canvas Creative",
+        "canva": "Canva Social Asset",
+        "slack": "Slack Channel Bot",
+        "meta": "Meta Ads Creative",
+        "generic": "CMS Webhook API"
+    }.get(source, "External Webhook")
+
+    # 5. Default rules to evaluate
+    default_rules = [
+        "Rule 1: Do not claim unqualified 100% medical guarantees or cures without clinical trials.",
+        "Rule 2: Mandated terminology: Refer to individuals as 'customer', 'patient', or 'member', never 'user'.",
+        "Rule 3: Ensure transparent pricing with zero hidden fees and conspicuous qualification disclosures.",
+        "Rule 4: Avoid high-pressure urgency tactics or unsubstantiated investment returns."
+    ]
+
+    # Run BrandGuard Review Engine
+    ai_output = review_product_content(brand_name, platform_label, content_text, default_rules)
+    rule_results = ai_output.get("rule_results", [])
+    violations_count = sum(1 for r in rule_results if r.get("status") == "Violation")
+    unclear_count = sum(1 for r in rule_results if r.get("status") == "Unclear")
+    risk_level = "high" if violations_count > 0 else "medium" if unclear_count > 0 else "low"
+    compliance_score = max(25, 100 - (violations_count * 25) - (unclear_count * 10))
+
+    # 6. Save review to main queue (reviews table)
+    review_record_id = None
+    try:
+        review_record_id = save_review_safe(
+            username=creator,
+            brand_name=brand_name,
+            platform=platform_label,
+            content=content_text,
+            risk_level=risk_level,
+            ai_summary=f"Automated webhook audit from {source.upper()} ({event_type}): {violations_count} violation(s) detected.",
+            suggested_content=ai_output.get("suggested_content", content_text),
+            rules=default_rules,
+            rule_results=rule_results
+        )
+    except Exception as e:
+        print(f"[Webhook Review Queue Save Error] {e}")
+
+    # 7. Persist webhook event details into webhook_events table
+    created_now = datetime.now(timezone.utc).isoformat()
+    result_payload = {
+        "score": compliance_score,
+        "risk_level": risk_level,
+        "violations_count": violations_count,
+        "unclear_count": unclear_count,
+        "suggested_content": ai_output.get("suggested_content", ""),
+        "rule_results": rule_results
+    }
+
+    try:
+        with engine.begin() as conn:
+            if "postgresql" in DATABASE_URL:
+                conn.execute(
+                    text("""
+                        INSERT INTO webhook_events (
+                            event_id, source, event_type, campaign_name, content_title,
+                            content_text, content_url, organization_id, creator_name,
+                            status, compliance_score, risk_level, review_id, created_at,
+                            payload_json, result_json
+                        )
+                        VALUES (
+                            :event_id, :source, :event_type, :campaign_name, :content_title,
+                            :content_text, :content_url, :organization_id, :creator_name,
+                            'processed', :compliance_score, :risk_level, :review_id, CURRENT_TIMESTAMP,
+                            :payload_json::jsonb, :result_json::jsonb
+                        )
+                    """),
+                    {
+                        "event_id": event_id,
+                        "source": source,
+                        "event_type": event_type,
+                        "campaign_name": campaign_name,
+                        "content_title": content_title,
+                        "content_text": content_text,
+                        "content_url": payload.content_url or "",
+                        "organization_id": org_id,
+                        "creator_name": creator,
+                        "compliance_score": compliance_score,
+                        "risk_level": risk_level,
+                        "review_id": review_record_id or 0,
+                        "payload_json": json.dumps(payload.model_dump()),
+                        "result_json": json.dumps(result_payload)
+                    }
+                )
+            else:
+                conn.execute(
+                    text("""
+                        INSERT INTO webhook_events (
+                            event_id, source, event_type, campaign_name, content_title,
+                            content_text, content_url, organization_id, creator_name,
+                            status, compliance_score, risk_level, review_id, created_at,
+                            payload_json, result_json
+                        )
+                        VALUES (
+                            :event_id, :source, :event_type, :campaign_name, :content_title,
+                            :content_text, :content_url, :organization_id, :creator_name,
+                            'processed', :compliance_score, :risk_level, :review_id, :created_at,
+                            :payload_json, :result_json
+                        )
+                    """),
+                    {
+                        "event_id": event_id,
+                        "source": source,
+                        "event_type": event_type,
+                        "campaign_name": campaign_name,
+                        "content_title": content_title,
+                        "content_text": content_text,
+                        "content_url": payload.content_url or "",
+                        "organization_id": org_id,
+                        "creator_name": creator,
+                        "compliance_score": compliance_score,
+                        "risk_level": risk_level,
+                        "review_id": review_record_id or 0,
+                        "created_at": created_now,
+                        "payload_json": json.dumps(payload.model_dump()),
+                        "result_json": json.dumps(result_payload)
+                    }
+                )
+    except Exception as e:
+        print(f"[Webhook DB Save Error] {e}")
+
+    return {
+        "success": True,
+        "event_id": event_id,
+        "status": "processed",
+        "source": source,
+        "event_type": event_type,
+        "simulation": payload.simulation,
+        "campaign_name": campaign_name,
+        "content_title": content_title,
+        "review_id": review_record_id,
+        "compliance": result_payload,
+        "enqueued": True,
+        "timestamp": created_now
+    }
+
+
+@app.get("/api/webhooks/logs")
+def api_get_webhook_logs(limit: int = 50, source: Optional[str] = None):
+    """
+    Returns recent webhook ingestion events and audit trace logs.
+    """
+    try:
+        with engine.begin() as conn:
+            query = "SELECT id, event_id, source, event_type, campaign_name, content_title, status, compliance_score, risk_level, review_id, created_at, payload_json, result_json FROM webhook_events"
+            params = {"limit": limit}
+            if source:
+                query += " WHERE LOWER(source) = LOWER(:source)"
+                params["source"] = source
+            query += " ORDER BY id DESC LIMIT :limit"
+
+            rows = conn.execute(text(query), params).fetchall()
+            logs = []
+            for r in rows:
+                p_json = {}
+                r_json = {}
+                try:
+                    p_json = json.loads(r[11]) if isinstance(r[11], str) else (r[11] or {})
+                except Exception:
+                    pass
+                try:
+                    r_json = json.loads(r[12]) if isinstance(r[12], str) else (r[12] or {})
+                except Exception:
+                    pass
+
+                logs.append({
+                    "id": r[0],
+                    "event_id": r[1],
+                    "source": r[2],
+                    "event_type": r[3],
+                    "campaign_name": r[4],
+                    "content_title": r[5],
+                    "status": r[6],
+                    "compliance_score": r[7],
+                    "risk_level": r[8],
+                    "review_id": r[9],
+                    "created_at": str(r[10]),
+                    "payload": p_json,
+                    "compliance": r_json
+                })
+            return {"success": True, "count": len(logs), "logs": logs}
+    except Exception as e:
+        return {"success": False, "count": 0, "logs": [], "error": str(e)}

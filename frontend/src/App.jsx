@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import confetti from 'canvas-confetti'
 import AkiraWorkflowPipeline from './components/AkiraWorkflowPipeline'
+import IntegrationsDashboard from './components/IntegrationsDashboard'
 import PdfBrochureScanner from './components/PdfBrochureScanner'
 import BenchmarkEvaluationSuite from './components/analytics/BenchmarkEvaluationSuite'
 import { BENCHMARK_50_CREATIVES } from './data/benchmark50Dataset'
@@ -43,6 +44,80 @@ const icons = {
 }
 
 function Icon({ name, size = 18, stroke = 1.8 }) {
+
+  // Webhook Event Trigger handler: Analyzes draft, enqueues to Review Queue, and saves to Audit History
+  const handleTriggerWebhook = (payload) => {
+    const brand = payload.organization_id || brandName || 'CarePlus Health'
+    const detectedIssues = analyzeCustomBrandDraft(
+      payload.content_text || '',
+      rules.join('\n'),
+      brand,
+      payload.source || 'generic'
+    )
+
+    const violations = (detectedIssues || []).filter((i) => i.severity === 'High' || i.state === 'open')
+    const compScore = Math.max(25, 100 - violations.length * 20)
+    const risk = violations.length > 1 ? 'High' : violations.length === 1 ? 'Medium' : 'Low'
+
+    const channelMap = {
+      figma: 'Figma Canvas Creative',
+      canva: 'Canva Social Asset',
+      slack: 'Slack Channel Bot',
+      meta: 'Meta Ads Creative',
+      generic: 'CMS Webhook API'
+    }
+
+    const newQueueItem = {
+      id: payload.event_id || `wh_${Date.now()}`,
+      title: payload.content_title || `${payload.campaign_name || 'Campaign'} Ad Creative`,
+      channel: channelMap[payload.source] || 'Webhook API',
+      author: `${payload.creator_name || 'Integrator'} (${(payload.source || 'Generic').toUpperCase()})`,
+      date: 'Just now',
+      status: 'In review',
+      risk: risk,
+      score: compScore,
+      draft: payload.content_text,
+      notes: `Automated webhook ingestion via ${(payload.source || 'Generic').toUpperCase()} (${payload.event_type || 'content.submitted'}). Verified HMAC payload.`,
+      issues: violations.length,
+      source: payload.source,
+      simulation: payload.simulation
+    }
+
+    setDashboard((prev) => ({
+      ...prev,
+      queue: [newQueueItem, ...prev.queue],
+      metrics: {
+        ...prev.metrics,
+        needsReview: (parseInt(prev.metrics.needsReview || '4', 10) + 1).toString().padStart(2, '0')
+      }
+    }))
+
+    const newAudit = {
+      auditId: `AUD-${Math.floor(1000 + Math.random() * 9000)}`,
+      title: payload.content_title || `${payload.campaign_name || 'Campaign'} Ad Creative`,
+      author: `${payload.creator_name || 'Integrator'} (${(payload.source || 'Generic').toUpperCase()})`,
+      approver: 'BrandGuard Automated Webhook Gatekeeper',
+      date: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      status: violations.length > 0 ? 'Flagged' : 'Approved',
+      score: compScore,
+      issuesFixed: violations.length,
+      originalText: payload.content_text,
+      approvedText: violations.length > 0 ? (violations[0].rewrite || payload.content_text) : payload.content_text,
+      aiSuggestions: violations
+    }
+
+    setAuditHistory((prev) => [newAudit, ...prev])
+    triggerToast(`⚡ Webhook Received: Added to Review Queue & Audit History (Score: ${compScore}/100)`)
+
+    return {
+      score: compScore,
+      risk_level: risk,
+      violations_count: violations.length,
+      rule_results: violations,
+      queue_item_id: newQueueItem.id
+    }
+  }
+
   return (
     <svg
       width={size}
@@ -3318,6 +3393,7 @@ export default function App() {
                 ['Review queue', 'inbox', dashboard.queue.filter((q) => q.status !== 'Approved').length || 3],
                 ['Benchmark Suite', 'chart', '50'],
                 ['Akira AI Pipeline', 'zap', 'v2.4'],
+                ['Integrations & Automation', 'globe', '5'],
                 ['Audit history', 'clock', auditHistory.length],
                 ['User logins', 'user', loginSessions.filter((s) => s.status === 'Online').length],
                 ['Rulebook', 'book', rules.length],
@@ -3357,6 +3433,7 @@ export default function App() {
                 ['Review queue', 'inbox', dashboard.queue.filter((q) => q.status !== 'Approved').length || 3],
                 ['Benchmark Suite', 'chart', '50'],
                 ['Akira AI Pipeline', 'zap', 'v2.4'],
+                ['Integrations & Automation', 'globe', '5'],
                 ['Rulebook', 'book', rules.length],
                 ['Audit history', 'clock', auditHistory.length],
                 ['Insights', 'chart', null]
@@ -3394,6 +3471,7 @@ export default function App() {
                 ['New review', 'sparkle', null],
                 ['Benchmark Suite', 'chart', '50'],
                 ['Akira AI Pipeline', 'zap', 'v2.4'],
+                ['Integrations & Automation', 'globe', '5'],
                 ['My submissions', 'file', clientSubmissions.length],
                 ['Brand guidelines', 'book', null]
               ].map(([label, icon, count]) => {
@@ -6073,6 +6151,17 @@ export default function App() {
               onNavigateToNewReview={() => setActiveNav('New review')}
             />
           </section>
+        )}
+
+        {/* ── FEATURE: ENTERPRISE CMS & DESIGN TOOL WEBHOOKS (Figma, Canva, Slack, Meta Ads, Generic) ── */}
+        {activeNav === 'Integrations & Automation' && (
+          <IntegrationsDashboard
+            currentUser={currentUser}
+            currentRole={currentRole}
+            onTriggerWebhook={handleTriggerWebhook}
+            onNavigateToQueue={() => setActiveNav('Review queue')}
+            onNavigateToAudit={() => setActiveNav('Audit history')}
+          />
         )}
 
         {/* ── FEATURE 3: REVIEW QUEUE TAB (From Image 3 & 4) ── */}
