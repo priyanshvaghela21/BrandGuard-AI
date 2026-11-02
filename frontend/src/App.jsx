@@ -862,7 +862,7 @@ function LoginScreen({ onLogin }) {
     }
   }
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault()
     setLoginError('')
     setSignupSuccess('')
@@ -878,37 +878,69 @@ function LoginScreen({ onLogin }) {
       return
     }
 
-    // ── Check if User is Registered ──
-    const foundUser = registeredUsers.find(
-      (u) => u.email.toLowerCase() === trimmedEmail
-    )
+    // Attempt backend authenticated login (Bcrypt verify + Rate-limiting + Anti-enumeration)
+    try {
+      const endpoint = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
+        ? 'http://127.0.0.1:8000/api/auth/login'
+        : '/api/auth/login'
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: trimmedEmail, password: trimmedPassword })
+      })
 
-    if (!foundUser) {
-      setLoginError(
-        'Account not found. Please click Sign Up to register first, then sign in with your email and password.'
+      if (res.status === 429) {
+        const data = await res.json()
+        setLoginError('🚨 ' + (data.detail || 'Too many failed login attempts. Temporarily locked for 15 minutes.'))
+        return
+      }
+
+      if (res.ok) {
+        const data = await res.json()
+        if (data.token) {
+          localStorage.setItem('brandguard_jwt_token', data.token)
+        }
+        const u = data.user
+        const portal = u.role?.toLowerCase().includes('admin') ? 'admin' : (u.role?.toLowerCase().includes('manager') ? 'manager' : 'creator')
+        onLogin({
+          email: u.email,
+          name: u.full_name || u.name,
+          role: portal === 'admin' ? 'admin' : (portal === 'manager' ? 'brand_manager' : 'creator'),
+          portalType: portal,
+          roleLabel: u.role_label || u.role,
+          workspace: u.company || 'CarePlus Health',
+          jwtToken: data.token,
+          securityMode: 'Bcrypt-12 + JWT-HS256'
+        })
+        return
+      } else {
+        // Rule 04: Generic Anti-Enumeration Error
+        setLoginError('Invalid email or password. Please verify your credentials.')
+        return
+      }
+    } catch (err) {
+      // Standalone / Offline fallback with strict generic error (Rule 04)
+      const foundUser = registeredUsers.find((u) => u.email.toLowerCase() === trimmedEmail)
+      const isPasswordValid = foundUser && (
+        trimmedPassword === foundUser.password ||
+        (foundUser.allowedPasswords && foundUser.allowedPasswords.includes(trimmedPassword))
       )
-      return
+
+      if (!foundUser || !isPasswordValid) {
+        // Rule 04: Generic Anti-Enumeration Error
+        setLoginError('Invalid email or password. Please verify your credentials.')
+        return
+      }
+
+      onLogin({
+        email: foundUser.email,
+        name: foundUser.name,
+        role: foundUser.role,
+        portalType: foundUser.portalType,
+        roleLabel: foundUser.roleLabel,
+        workspace: foundUser.workspace || 'CarePlus Health'
+      })
     }
-
-    // ── Verify Password ──
-    const isPasswordValid =
-      trimmedPassword === foundUser.password ||
-      (foundUser.allowedPasswords && foundUser.allowedPasswords.includes(trimmedPassword))
-
-    if (!isPasswordValid) {
-      setLoginError('Authentication failed: Invalid password. Please enter the correct password.')
-      return
-    }
-
-    // ── Authentication Success ──
-    onLogin({
-      email: foundUser.email,
-      name: foundUser.name,
-      role: foundUser.role,
-      portalType: foundUser.portalType,
-      roleLabel: foundUser.roleLabel,
-      workspace: foundUser.workspace || 'CarePlus Health'
-    })
   }
 
   const handleSignUpSubmit = (e) => {
