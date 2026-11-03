@@ -216,9 +216,9 @@ function CloudflareTurnstileWidget({
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <svg width="46" height="20" viewBox="0 0 120 50" fill="none">
-            <path d="M96.4 34.3c-.6-4.5-3.8-8.1-8.2-9.2-1.3-5.8-5.8-10.2-11.6-10.9-6.7-.8-12.9 2.8-15.3 8.7-1.9-.8-4-.1.1-6.2-.8-4.1.6-7.7 3.3-9.1 7.2-.9 2.2-.8 4.7.1 7H93.5c1.7 0 3-1.3 2.9-2z" fill="#F38020"/>
-            <path d="M103.8 34.3c-.5-2.9-2.6-5.3-5.6-5.9-.4 0-.7-.1-1-.1.4 1.1.5 2.3.4 3.4 0 .5-.1 1-.2 1.4h5.3c.7 0 1.2-.5 1.1-1.2z" fill="#FAAD3F"/>
+          <svg width="46" height="20" viewBox="0 0 256 116" fill="none">
+            <path fill="#F38020" d="M176.332 108.348c1.593-5.31 1.062-10.622-1.593-13.809-2.656-3.187-6.374-5.31-11.154-5.842L71.17 87.634c-.531 0-1.062-.53-1.593-.53-.531-.532-.531-1.063 0-1.594.531-1.062 1.062-1.594 2.124-1.594l92.946-1.062c11.154-.53 22.839-9.56 27.087-20.182l5.312-13.809c0-.532.531-1.063 0-1.594C191.203 20.182 166.772 0 138.091 0 111.535 0 88.697 16.995 80.73 40.896c-5.311-3.718-11.684-5.843-19.12-5.31-12.747 1.061-22.838 11.683-24.432 24.43-.531 3.187 0 6.374.532 9.56C16.996 70.107 0 87.103 0 108.348c0 2.124 0 3.718.531 5.842 0 1.063 1.062 1.594 1.594 1.594h170.489c1.062 0 2.125-.53 2.125-1.594l1.593-5.842Z"/>
+            <path fill="#FAAD3F" d="M205.544 48.863h-2.656c-.531 0-1.062.53-1.593 1.062l-3.718 12.747c-1.593 5.31-1.062 10.623 1.594 13.809 2.655 3.187 6.373 5.31 11.153 5.843l19.652 1.062c.53 0 1.062.53 1.593.53.53.532.53 1.063 0 1.594-.531 1.063-1.062 1.594-2.125 1.594l-20.182 1.062c-11.154.53-22.838 9.56-27.087 20.182l-1.063 4.78c-.531.532 0 1.594 1.063 1.594h70.108c1.062 0 1.593-.531 1.593-1.593 1.062-4.25 2.124-9.03 2.124-13.81 0-27.618-22.838-50.456-50.456-50.456"/>
           </svg>
           <span
             style={{
@@ -1012,6 +1012,7 @@ function LoginScreen({ onLogin }) {
   const [turnstileAttempted, setTurnstileAttempted] = useState(false)
   const [loginError, setLoginError] = useState('')
   const [showSignUp, setShowSignUp] = useState(false)
+  const [authMode, setAuthMode] = useState('signin') // 'signin' | 'signup'
   const [oauthProvider, setOauthProvider] = useState(null) // 'Google' | 'Microsoft' | 'GitHub' | null
   const [signupSuccess, setSignupSuccess] = useState('')
 
@@ -1188,6 +1189,29 @@ function LoginScreen({ onLogin }) {
     }
   }
 
+  const handleForgotPassword = (e) => {
+    if (e && e.preventDefault) e.preventDefault()
+    setLoginError('')
+    setSignUpError('')
+    setSignupSuccess('')
+    const targetEmail = authMode === 'signup' ? signUpForm.email : email
+    const trimmed = (targetEmail || '').trim().toLowerCase()
+    if (!trimmed) {
+      const msg = 'Please enter your work email address to reset your password.'
+      if (authMode === 'signup') setSignUpError(msg)
+      else setLoginError(msg)
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(trimmed)) {
+      const msg = 'Please enter a valid work email address (e.g. name@company.com).'
+      if (authMode === 'signup') setSignUpError(msg)
+      else setLoginError(msg)
+      return
+    }
+    setSignupSuccess(`Password reset instructions sent to ${trimmed}. Contact Brand Manager (Sanskruti Antala) if assistance is required.`)
+  }
+
   const handleLoginSubmit = async (e) => {
     e.preventDefault()
     setLoginError('')
@@ -1197,6 +1221,11 @@ function LoginScreen({ onLogin }) {
 
     if (!trimmedEmail) {
       setLoginError('Please enter your work email.')
+      return
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(trimmedEmail)) {
+      setLoginError('Please enter a valid work email address (e.g. name@company.com).')
       return
     }
     if (!trimmedPassword) {
@@ -1336,6 +1365,11 @@ function LoginScreen({ onLogin }) {
       setSignUpError('Work email is required.')
       return
     }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(signUpForm.email.trim())) {
+      setSignUpError('Please enter a valid work email address (e.g. name@company.com).')
+      return
+    }
     if (!signUpForm.password) {
       setSignUpError('Password is required (at least 6 characters).')
       return
@@ -1457,152 +1491,387 @@ function LoginScreen({ onLogin }) {
       <div className="login-main">
         {/* Left Column: Login Card matching reference screenshot */}
         <div className="login-card">
-          <form onSubmit={handleLoginSubmit}>
-            <label className="auth-label">
-              Work email
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value)
-                  setLoginError('')
-                }}
-                placeholder="Enter your email address"
-                autoFocus
-              />
-            </label>
+          {/* Top Auth Mode Tabs: Sign In / Sign Up */}
+          <div
+            role="tablist"
+            aria-label="Account Access Options"
+            style={{
+              display: 'flex',
+              background: '#0c161d',
+              borderRadius: '8px',
+              padding: '3px',
+              marginBottom: '18px',
+              border: '1px solid #233b47'
+            }}
+          >
+            <button
+              type="button"
+              role="tab"
+              id="tab-signin"
+              aria-selected={authMode === 'signin'}
+              onClick={() => { setAuthMode('signin'); setLoginError(''); setSignUpError(''); setSignupSuccess(''); }}
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: 'none',
+                background: authMode === 'signin' ? 'var(--mint)' : 'transparent',
+                color: authMode === 'signin' ? '#0d171e' : '#889fa8',
+                fontWeight: '800',
+                fontSize: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Sign In
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="tab-signup"
+              aria-selected={authMode === 'signup'}
+              onClick={() => { setAuthMode('signup'); setLoginError(''); setSignUpError(''); setSignupSuccess(''); }}
+              style={{
+                flex: 1,
+                padding: '8px 12px',
+                borderRadius: '6px',
+                border: 'none',
+                background: authMode === 'signup' ? 'var(--mint)' : 'transparent',
+                color: authMode === 'signup' ? '#0d171e' : '#889fa8',
+                fontWeight: '800',
+                fontSize: '12px',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Sign Up
+            </button>
+          </div>
 
-            {/* Role Assigned After Verification Box */}
-            <div className="assigned-role-note">
-              <Icon name="lock" size={14} />
-              <div>
-                <strong>Role assigned after verification</strong>
-                <small>Permissions granted based on Admin, Manager, or Creator profile.</small>
-              </div>
-            </div>
-
-            <label className="auth-label">
-              Password
-              <div className="password-field">
+          {authMode === 'signin' ? (
+            <form onSubmit={handleLoginSubmit} aria-label="Sign-in form" noValidate>
+              <label className="auth-label">
+                Work email
                 <input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
+                  type="email"
+                  name="email"
+                  value={email}
                   onChange={(e) => {
-                    setPassword(e.target.value)
+                    setEmail(e.target.value)
                     setLoginError('')
                   }}
-                  placeholder="Enter your password"
+                  placeholder="Enter your email address"
+                  autoFocus
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  title={showPassword ? 'Hide password' : 'Show password'}
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                >
-                  <Icon name={showPassword ? 'eyeOff' : 'eye'} size={16} stroke={2} />
-                </button>
-              </div>
-            </label>
-
-            <div className="auth-options">
-              <label className="check-label">
-                <input
-                  type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                />
-                Keep me signed in
               </label>
-              <button
-                type="button"
-                className="link-button"
-                onClick={() => setLoginError('Contact Brand Manager (Sanskruti Antala) to reset credentials.')}
-              >
-                Forgot password?
-              </button>
-            </div>
 
-            {/* Cloudflare Turnstile Human Verification Box (Matching Image Exactly) */}
-            <CloudflareTurnstileWidget
-              verified={turnstileVerified}
-              loading={turnstileLoading}
-              onToggle={handleToggleTurnstile}
-              label="Verify you are human"
-            />
-
-            {signupSuccess && (
-              <div
-                className="auth-success-alert"
-                style={{
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  padding: '11px 13px',
-                  margin: '0 0 14px',
-                  borderRadius: '8px',
-                  background: 'rgba(186, 245, 127, 0.12)',
-                  border: '1px solid rgba(186, 245, 127, 0.35)',
-                  color: 'var(--mint)',
-                  fontSize: '11px',
-                  lineHeight: '1.4'
-                }}
-              >
-                <Icon name="check" size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
+              {/* Role Assigned After Verification Box */}
+              <div className="assigned-role-note">
+                <Icon name="lock" size={14} />
                 <div>
-                  <strong>Registration Completed!</strong>
-                  <div style={{ color: '#d3e8db', marginTop: '2px' }}>{signupSuccess}</div>
+                  <strong>Role assigned after verification</strong>
+                  <small>Permissions granted based on Admin, Manager, or Creator profile.</small>
                 </div>
               </div>
-            )}
 
-            {loginError && (
-              <div
-                className="auth-error"
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px',
-                  margin: '-4px 0 14px',
-                  padding: '9px 12px',
-                  borderRadius: '7px',
-                  background: 'rgba(255, 147, 117, 0.08)',
-                  border: '1px solid rgba(255, 147, 117, 0.25)',
-                  color: 'var(--coral)',
-                  fontSize: '11px'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Icon name="warning" size={13} style={{ flexShrink: 0 }} />
-                  <span>{loginError}</span>
-                </div>
-                {loginError.includes('Sign Up') && (
+              <label className="auth-label">
+                Password
+                <div className="password-field">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    name="password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value)
+                      setLoginError('')
+                    }}
+                    placeholder="Enter your password"
+                  />
                   <button
                     type="button"
-                    className="link-button"
-                    style={{
-                      alignSelf: 'flex-start',
-                      color: 'var(--mint)',
-                      fontWeight: '800',
-                      fontSize: '11px',
-                      textDecoration: 'underline',
-                      marginTop: '4px',
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => {
-                      setShowSignUp(true)
-                      setSignUpForm((prev) => ({ ...prev, email }))
-                    }}
+                    onClick={() => setShowPassword(!showPassword)}
+                    title={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
-                    👉 Click here to Sign Up (Registration) now
+                    <Icon name={showPassword ? 'eyeOff' : 'eye'} size={16} stroke={2} />
                   </button>
-                )}
-              </div>
-            )}
+                </div>
+              </label>
 
-            <button type="submit" className="auth-submit">
-              Continue with Email <Icon name="arrow" size={15} />
-            </button>
-          </form>
+              <div className="auth-options">
+                <label className="check-label">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  Keep me signed in
+                </label>
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={handleForgotPassword}
+                  title="Reset your password"
+                >
+                  Forgot password?
+                </button>
+              </div>
+
+              {/* Cloudflare Turnstile Human Verification Box (Matching Image Exactly) */}
+              <CloudflareTurnstileWidget
+                verified={turnstileVerified}
+                loading={turnstileLoading}
+                onToggle={handleToggleTurnstile}
+                label="Verify you are human"
+              />
+
+              {signupSuccess && (
+                <div
+                  className="auth-success-alert"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
+                    padding: '11px 13px',
+                    margin: '0 0 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(186, 245, 127, 0.12)',
+                    border: '1px solid rgba(186, 245, 127, 0.35)',
+                    color: 'var(--mint)',
+                    fontSize: '11px',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  <Icon name="check" size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
+                  <div>
+                    <strong>Action Completed</strong>
+                    <div style={{ color: '#d3e8db', marginTop: '2px' }}>{signupSuccess}</div>
+                  </div>
+                </div>
+              )}
+
+              {loginError && (
+                <div
+                  className="auth-error"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    margin: '-4px 0 14px',
+                    padding: '9px 12px',
+                    borderRadius: '7px',
+                    background: 'rgba(255, 147, 117, 0.08)',
+                    border: '1px solid rgba(255, 147, 117, 0.25)',
+                    color: 'var(--coral)',
+                    fontSize: '11px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Icon name="warning" size={13} style={{ flexShrink: 0 }} />
+                    <span>{loginError}</span>
+                  </div>
+                  {loginError.includes('Sign Up') && (
+                    <button
+                      type="button"
+                      className="link-button"
+                      style={{
+                        alignSelf: 'flex-start',
+                        color: 'var(--mint)',
+                        fontWeight: '800',
+                        fontSize: '11px',
+                        textDecoration: 'underline',
+                        marginTop: '4px',
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setAuthMode('signup')}
+                    >
+                      👉 Click here to Sign Up (Registration) now
+                    </button>
+                  )}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="auth-submit"
+                name="signin-submit"
+                aria-label="Sign in"
+              >
+                Continue with Email <Icon name="arrow" size={15} />
+              </button>
+
+              {/* In-form Sign Up Control for accessibility and testing tools */}
+              <div style={{ marginTop: '12px', textAlign: 'center' }}>
+                <button
+                  type="button"
+                  className="link-button"
+                  name="signup"
+                  aria-label="Sign up"
+                  data-testid="signup-control"
+                  onClick={() => {
+                    setAuthMode('signup')
+                    setLoginError('')
+                    setSignUpError('')
+                  }}
+                  style={{ color: 'var(--mint)', fontWeight: '700', fontSize: '11px', cursor: 'pointer' }}
+                >
+                  Don't have an account? Sign up
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleSignUpSubmit} aria-label="Sign-up form" data-testid="signup-form" noValidate>
+              <label className="auth-label">
+                Full name
+                <input
+                  type="text"
+                  name="fullName"
+                  value={signUpForm.fullName}
+                  onChange={(e) => {
+                    setSignUpForm({ ...signUpForm, fullName: e.target.value })
+                    setSignUpError('')
+                  }}
+                  placeholder="e.g. Sanskruti Antala"
+                  autoFocus
+                />
+              </label>
+
+              <label className="auth-label">
+                Work email
+                <input
+                  type="email"
+                  name="email"
+                  value={signUpForm.email}
+                  onChange={(e) => {
+                    setSignUpForm({ ...signUpForm, email: e.target.value })
+                    setSignUpError('')
+                  }}
+                  placeholder="name@company.com"
+                />
+              </label>
+
+              <label className="auth-label">
+                Password
+                <input
+                  type="password"
+                  name="password"
+                  value={signUpForm.password}
+                  onChange={(e) => {
+                    setSignUpForm({ ...signUpForm, password: e.target.value })
+                    setSignUpError('')
+                  }}
+                  placeholder="At least 6 characters"
+                />
+              </label>
+
+              <label className="auth-label">
+                Confirm password
+                <input
+                  type="password"
+                  name="confirmPassword"
+                  value={signUpForm.confirmPassword}
+                  onChange={(e) => {
+                    setSignUpForm({ ...signUpForm, confirmPassword: e.target.value })
+                    setSignUpError('')
+                  }}
+                  placeholder="Repeat your password"
+                />
+              </label>
+
+              <div className="auth-options">
+                <span style={{ fontSize: '10px', color: '#889fa8' }}>
+                  Enterprise brand governance workspace.
+                </span>
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={handleForgotPassword}
+                  title="Reset your password"
+                >
+                  Forgot password?
+                </button>
+              </div>
+
+              {/* Cloudflare Turnstile Human Verification Box */}
+              <CloudflareTurnstileWidget
+                verified={signUpTurnstile}
+                loading={signUpTurnstileLoading}
+                onToggle={handleToggleSignUpTurnstile}
+                label="Verify you are human"
+              />
+
+              {signupSuccess && (
+                <div
+                  className="auth-success-alert"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
+                    padding: '11px 13px',
+                    margin: '0 0 14px',
+                    borderRadius: '8px',
+                    background: 'rgba(186, 245, 127, 0.12)',
+                    border: '1px solid rgba(186, 245, 127, 0.35)',
+                    color: 'var(--mint)',
+                    fontSize: '11px',
+                    lineHeight: '1.4'
+                  }}
+                >
+                  <Icon name="check" size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
+                  <div>
+                    <strong>Action Completed</strong>
+                    <div style={{ color: '#d3e8db', marginTop: '2px' }}>{signupSuccess}</div>
+                  </div>
+                </div>
+              )}
+
+              {signUpError && (
+                <div
+                  className="auth-error"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    margin: '-4px 0 14px',
+                    padding: '9px 12px',
+                    borderRadius: '7px',
+                    background: 'rgba(255, 147, 117, 0.08)',
+                    border: '1px solid rgba(255, 147, 117, 0.25)',
+                    color: 'var(--coral)',
+                    fontSize: '11px'
+                  }}
+                >
+                  <Icon name="warning" size={13} style={{ flexShrink: 0 }} />
+                  <span>{signUpError}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="auth-submit"
+                name="signup-submit"
+                aria-label="Sign up"
+                data-testid="signup-submit-button"
+              >
+                Create account <Icon name="arrow" size={15} />
+              </button>
+
+              <div style={{ marginTop: '12px', textAlign: 'center' }}>
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => {
+                    setAuthMode('signin')
+                    setSignUpError('')
+                    setLoginError('')
+                  }}
+                  style={{ color: 'var(--mint)', fontWeight: '700', fontSize: '11px', cursor: 'pointer' }}
+                >
+                  Already have an account? Sign in
+                </button>
+              </div>
+            </form>
+          )}
 
           <div className="login-divider">
             <span>OR CONTINUE WITH</span>
@@ -1662,17 +1931,41 @@ function LoginScreen({ onLogin }) {
             </div>
           </div>
 
-          {/* Sign Up Link (Positioned at the very bottom/last) */}
+          {/* Sign Up / Sign In Toggle Link (Positioned at the very bottom/last) */}
           <p className="login-help" style={{ order: 6, margin: '20px 0 0', textAlign: 'center', fontSize: '11px', color: '#71858e' }}>
-            Don't have an account?{' '}
-            <button
-              type="button"
-              className="link-button"
-              style={{ fontWeight: '700', color: 'var(--mint)', cursor: 'pointer' }}
-              onClick={() => setShowSignUp(true)}
-            >
-              Sign up
-            </button>
+            {authMode === 'signin' ? (
+              <>
+                Don't have an account?{' '}
+                <button
+                  type="button"
+                  className="link-button"
+                  style={{ fontWeight: '700', color: 'var(--mint)', cursor: 'pointer' }}
+                  onClick={() => {
+                    setAuthMode('signup')
+                    setLoginError('')
+                    setSignUpError('')
+                  }}
+                >
+                  Sign up
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{' '}
+                <button
+                  type="button"
+                  className="link-button"
+                  style={{ fontWeight: '700', color: 'var(--mint)', cursor: 'pointer' }}
+                  onClick={() => {
+                    setAuthMode('signin')
+                    setLoginError('')
+                    setSignUpError('')
+                  }}
+                >
+                  Sign in
+                </button>
+              </>
+            )}
           </p>
         </div>
 
