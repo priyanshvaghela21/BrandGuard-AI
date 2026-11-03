@@ -878,6 +878,31 @@ function LoginScreen({ onLogin }) {
       return
     }
 
+    // Helper to get freshest registered users from state and localStorage
+    const getFreshestUsers = () => {
+      let list = Array.isArray(registeredUsers) ? [...registeredUsers] : []
+      try {
+        const saved = localStorage.getItem('brandguard_registered_users')
+        if (saved) {
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            parsed.forEach((p) => {
+              if (!list.some((u) => u.email.toLowerCase() === p.email.toLowerCase())) {
+                list.push(p)
+              } else {
+                const idx = list.findIndex((u) => u.email.toLowerCase() === p.email.toLowerCase())
+                if (idx !== -1) list[idx] = { ...list[idx], ...p }
+              }
+            })
+          }
+        }
+      } catch (e) {}
+      return list
+    }
+
+    const allUsers = getFreshestUsers()
+    const localUser = allUsers.find((u) => u.email.toLowerCase() === trimmedEmail)
+
     // Attempt backend authenticated login (Bcrypt verify + Rate-limiting + Anti-enumeration)
     try {
       const endpoint = (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))
@@ -891,7 +916,7 @@ function LoginScreen({ onLogin }) {
 
       if (res.status === 429) {
         const data = await res.json()
-        setLoginError('🚨 ' + (data.detail || 'Too many failed login attempts. Temporarily locked for 15 minutes.'))
+        setLoginError('⏳ ' + (data.detail || 'Too many failed login attempts. Temporarily locked for 15 minutes.'))
         return
       }
 
@@ -902,7 +927,6 @@ function LoginScreen({ onLogin }) {
         }
         const u = data.user
         const portal = u.role?.toLowerCase().includes('admin') ? 'admin' : (u.role?.toLowerCase().includes('manager') ? 'manager' : 'creator')
-        const localUser = registeredUsers.find((r) => r.email.toLowerCase() === trimmedEmail)
         const userWs = (localUser?.workspace || u.workspace || u.company || u.organization || 'CarePlus Health').trim()
         onLogin({
           email: u.email,
@@ -916,36 +940,33 @@ function LoginScreen({ onLogin }) {
           securityMode: 'Bcrypt-12 + JWT-HS256'
         })
         return
-      } else {
-        // Rule 04: Generic Anti-Enumeration Error
-        setLoginError('Invalid email or password. Please verify your credentials.')
-        return
       }
     } catch (err) {
-      // Standalone / Offline fallback with strict generic error (Rule 04)
-      const foundUser = registeredUsers.find((u) => u.email.toLowerCase() === trimmedEmail)
-      const isPasswordValid = foundUser && (
-        trimmedPassword === foundUser.password ||
-        (foundUser.allowedPasswords && foundUser.allowedPasswords.includes(trimmedPassword))
-      )
+      // Backend offline or unreachable (e.g. static hosting on Vercel) - proceed to local check
+    }
 
-      if (!foundUser || !isPasswordValid) {
-        // Rule 04: Generic Anti-Enumeration Error
-        setLoginError('Invalid email or password. Please verify your credentials.')
-        return
-      }
+    // Client / Local Fallback Authentication (Guarantees Sign-Up logins succeed seamlessly on Vercel)
+    const isPasswordValid = localUser && (
+      trimmedPassword === localUser.password ||
+      (localUser.allowedPasswords && localUser.allowedPasswords.includes(trimmedPassword))
+    )
 
-      const userWs = (foundUser.workspace || foundUser.company || 'CarePlus Health').trim()
+    if (localUser && isPasswordValid) {
+      const userWs = (localUser.workspace || localUser.company || 'CarePlus Health').trim()
       onLogin({
-        email: foundUser.email,
-        name: foundUser.name,
-        role: foundUser.role,
-        portalType: foundUser.portalType,
-        roleLabel: foundUser.roleLabel,
+        email: localUser.email,
+        name: localUser.name,
+        role: localUser.role || 'creator',
+        portalType: localUser.portalType || 'client',
+        roleLabel: localUser.roleLabel || 'Content Creator',
         workspace: userWs,
         company: userWs
       })
+      return
     }
+
+    // Both live backend and local registered users failed credentials
+    setLoginError('Invalid email or password. Please verify your credentials.')
   }
 
   const handleSignUpSubmit = (e) => {
