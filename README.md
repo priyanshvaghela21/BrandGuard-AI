@@ -332,17 +332,40 @@ To evaluate the complete end-to-end user journey, follow these steps:
 ## 12. Core Contributors
 
 <p align="center">
-  <a href="https://github.com/priyanshvaghela21"><img src="https://github-readme-stats.vercel.app/api/pin/?username=priyanshvaghela21&repo=BrandGuard-AI&hide_border=true&theme=transparent&bg_color=07111F&title_color=F8FAFC&text_color=CBD5E1&icon_color=22D3EE" alt="BrandGuard AI Repo Card" /></a>
+  <a href="https://github.com/priyanshvaghela21/BrandGuard-AI">
+    <img src="./assets/repo-card.svg" alt="BrandGuard AI Repo Card" width="600" />
+  </a>
 </p>
 
-- **Priyansh Vaghela** — Lead Architect, Akira AI Supervised Model & Frontend Engineering ([@priyanshvaghela21](https://github.com/priyanshvaghela21))
-- **Sanskruti Antala** — Backend Microservices, Rule Engine & Database Architecture
+<table align="center">
+  <tr>
+    <td align="center" width="280">
+      <a href="https://github.com/priyanshvaghela21">
+        <img src="https://github.com/priyanshvaghela21.png" width="90" height="90" style="border-radius: 50%;" alt="Priyansh Vaghela" />
+        <br />
+        <sub><b>Priyansh Vaghela</b></sub>
+      </a>
+      <br />
+      <sub>Lead Architect · AI Engine &amp; Frontend</sub>
+    </td>
+    <td align="center" width="280">
+      <a href="https://github.com/priyanshvaghela21/BrandGuard-AI">
+        <img src="https://ui-avatars.com/api/?name=Sanskruti+Antala&amp;background=0E1E2E&amp;color=34D399&amp;size=90&amp;bold=true" width="90" height="90" style="border-radius: 50%;" alt="Sanskruti Antala" />
+        <br />
+        <sub><b>Sanskruti Antala</b></sub>
+      </a>
+      <br />
+      <sub>Core Member · Backend &amp; Rule Engine</sub>
+    </td>
+  </tr>
+</table>
 
 ---
 
-<div align="center">
-  <p>
-    <sub>Designed with curiosity · Built with intent · Shipped from India 🇮🇳</sub>
-  </p>
+<p align="center">
+  <sub>Designed with curiosity · Built with intent · Shipped from India 🇮🇳</sub>
+</p>
+
+<p align="center">
   <img src="./assets/footer-wave.svg" alt="Footer decoration" width="100%" />
-</div>
+</p>
