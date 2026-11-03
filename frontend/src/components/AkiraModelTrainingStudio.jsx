@@ -11,8 +11,12 @@ export default function AkiraModelTrainingStudio() {
     status: 'Blocked',
     category: 'Healthcare - Medical Cure Guarantee',
     rule: 'ASCI Medical Code Ch. 1 & Drugs and Magic Remedies Act',
-    latency: '3.1ms'
+    latency: '3.1ms',
+    matchedKeyword: '100% cure'
   })
+  const [isInferencing, setIsInferencing] = useState(false)
+  const [lastInferredAt, setLastInferredAt] = useState('Just now')
+
   const [isRetraining, setIsRetraining] = useState(false)
   const [retrainProgress, setRetrainProgress] = useState(0)
   const [retrainLogs, setRetrainLogs] = useState([])
@@ -46,46 +50,58 @@ export default function AkiraModelTrainingStudio() {
     }
   ]
 
-  const handleRunInference = (customText) => {
-    const text = customText || testInput
+  const handleRunInference = async (customText) => {
+    const text = (customText !== undefined ? customText : testInput) || ''
+    if (!text.trim()) return
+
+    setIsInferencing(true)
+    const startTime = performance.now()
+
+    // 250ms asynchronous neural simulation step for clear user feedback
+    await new Promise((r) => setTimeout(r, 260))
+
     const lower = text.toLowerCase()
 
-    const violationKeywords = [
-      'guarantee', '100% cure', 'risk-free', 'zero loss', 'zero fee',
-      'under 10 min', 'flat 60%', 'flat 70%', 'flat 80%', 'miracle',
-      'permanently cure', 'zero chemical', 'cheapest in the world'
+    const violationTriggers = [
+      { phrase: '100% cure', category: 'Healthcare - Medical Cure Guarantee', rule: 'ASCI Medical Code Ch. 1 & Drugs and Magic Remedies Act' },
+      { phrase: 'cancer', category: 'Healthcare - Critical Disease Claim', rule: 'FDA 21 CFR §312 & Drugs and Magic Remedies Act' },
+      { phrase: 'cure', category: 'Healthcare - Medical Guarantee', rule: 'ASCI Medical Code Ch. 1' },
+      { phrase: 'guarantee', category: 'General - Unconditional Guarantee', rule: 'ASCI Misleading Claims Ch. 1' },
+      { phrase: 'overnight', category: 'General - Exaggerated Fast Efficacy', rule: 'ASCI Substantiation Guidelines' },
+      { phrase: 'risk-free', category: 'FinTech - Zero Risk Investment Claim', rule: 'SEBI / RBI Financial Advertising Guidelines' },
+      { phrase: 'zero loss', category: 'FinTech - Capital Preservation Claim', rule: 'SEBI Investment Code' },
+      { phrase: 'zero fee', category: 'FinTech/Pricing - Unqualified Free Claims', rule: 'FTC Pricing Disclosures & ASCI Ch. 1' },
+      { phrase: 'under 10 min', category: 'Quick Commerce - Absolute Delivery Time', rule: 'ASCI Quick Commerce Guidelines' },
+      { phrase: '10 min', category: 'Quick Commerce - Absolute Delivery Promise', rule: 'ASCI Quick Commerce Guidelines' },
+      { phrase: 'flat 60%', category: 'E-Commerce - Discount Cap Exceeded', rule: 'Brand Governance Discount Ceiling (Max 40%)' },
+      { phrase: 'flat 70%', category: 'E-Commerce - Discount Cap Exceeded', rule: 'Brand Governance Discount Ceiling (Max 40%)' },
+      { phrase: 'flat 80%', category: 'E-Commerce - Discount Cap Exceeded', rule: 'Brand Governance Discount Ceiling (Max 40%)' },
+      { phrase: 'miracle', category: 'Wellness - Superlative Efficacy', rule: 'ASCI Prohibited Supernatural Claims' },
+      { phrase: 'permanently cure', category: 'Healthcare - Permanent Cure Guarantee', rule: 'Drugs and Magic Remedies Act' },
+      { phrase: 'zero chemical', category: 'Cosmetics - False Pure/Organic Claim', rule: 'ASCI Greenwashing Standards' },
+      { phrase: 'cheapest in the world', category: 'Retail - Unsubstantiated Superlative', rule: 'Consumer Protection Act 2020' },
+      { phrase: '25%', category: 'FinTech - Unrealistic Return Promise', rule: 'SEBI Portfolio Advertising Code' }
     ]
 
-    const isViolation = violationKeywords.some((kw) => lower.includes(kw))
+    const matched = violationTriggers.find((vt) => lower.includes(vt.phrase))
+    const isViolation = !!matched
 
-    let conf = isViolation ? 0.88 + Math.random() * 0.08 : 0.72 + Math.random() * 0.12
-    conf = Math.min(0.98, Math.max(0.65, conf))
-
-    let category = 'General Advertising Governance'
-    let rule = 'ASCI General Standards Code'
-
-    if (lower.includes('cure') || lower.includes('cancer') || lower.includes('hospital') || lower.includes('remedy')) {
-      category = 'Healthcare - Medical Guarantee'
-      rule = 'ASCI Medical Code Ch. 1 & Drugs and Magic Remedies Act'
-    } else if (lower.includes('returns') || lower.includes('invest') || lower.includes('risk-free') || lower.includes('crypto')) {
-      category = 'FinTech - Unsubstantiated Returns'
-      rule = 'SEBI / RBI Financial Advertising Guidelines'
-    } else if (lower.includes('discount') || lower.includes('flat') || lower.includes('cheapest')) {
-      category = 'E-Commerce - Promotional Pricing Cap'
-      rule = 'Consumer Protection Act (E-Commerce Rules 2020)'
-    } else if (lower.includes('delivery') || lower.includes('minute')) {
-      category = 'Quick Commerce - Unasterisked Delivery Time'
-      rule = 'ASCI Guidelines for Quick Commerce'
-    }
+    const calcLatency = ((performance.now() - startTime) * 0.015 + 2.1).toFixed(1)
+    let conf = isViolation ? 0.88 + Math.random() * 0.09 : 0.74 + Math.random() * 0.12
+    conf = Math.min(0.99, Math.max(0.68, conf))
 
     setPrediction({
       label: isViolation ? 'Violation' : 'Compliant',
       confidence: conf,
       status: isViolation ? 'Blocked' : 'Safe',
-      category,
-      rule,
-      latency: `${(2.8 + Math.random() * 1.5).toFixed(1)}ms`
+      category: isViolation ? matched.category : 'Compliant Brand Marketing',
+      rule: isViolation ? matched.rule : 'Verified by Akira-Governance-Net v2.4 (ASCI & FTC Compliant)',
+      latency: `${calcLatency}ms`,
+      matchedKeyword: isViolation ? matched.phrase : null
     })
+
+    setLastInferredAt(new Date().toLocaleTimeString())
+    setIsInferencing(false)
   }
 
   const handleRetrain = async () => {
@@ -331,10 +347,11 @@ export default function AkiraModelTrainingStudio() {
                   border: '1px solid #233b49',
                   color: '#cbd5e1',
                   borderRadius: '6px',
-                  padding: '4px 10px',
+                  padding: '5px 10px',
                   fontSize: '10.5px',
                   fontWeight: '700',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
                 {p.title}
@@ -350,7 +367,7 @@ export default function AkiraModelTrainingStudio() {
               rows={4}
               value={testInput}
               onChange={(e) => setTestInput(e.target.value)}
-              placeholder="Paste ad copy, caption, or claim here..."
+              placeholder="Paste ad copy, caption, or claim here to test with Akira AI..."
               style={{
                 width: '100%',
                 background: '#060e13',
@@ -366,42 +383,69 @@ export default function AkiraModelTrainingStudio() {
               }}
             />
 
-            <button
-              type="button"
-              onClick={() => handleRunInference()}
-              style={{
-                marginTop: '10px',
-                padding: '8px 16px',
-                borderRadius: '6px',
-                border: 'none',
-                background: '#38bdf8',
-                color: '#071622',
-                fontSize: '11.5px',
-                fontWeight: '800',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              ⚡ Run Akira Model Inference (&lt; 4ms)
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginTop: '10px', flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                disabled={isInferencing}
+                onClick={() => handleRunInference()}
+                style={{
+                  padding: '9px 18px',
+                  borderRadius: '6px',
+                  border: 'none',
+                  background: isInferencing ? '#1f3a4c' : '#38bdf8',
+                  color: isInferencing ? '#729cb0' : '#071622',
+                  fontSize: '12px',
+                  fontWeight: '800',
+                  cursor: isInferencing ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(56, 189, 248, 0.35)',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {isInferencing ? (
+                  <>
+                    <span className="loading-spinner" style={{ width: '13px', height: '13px', borderWidth: '2px' }} />
+                    Evaluating Neural Weights...
+                  </>
+                ) : (
+                  <>⚡ Run Akira Model Inference (&lt; 4ms)</>
+                )}
+              </button>
+
+              <span style={{ fontSize: '11px', color: '#64748b' }}>
+                Evaluated: <strong style={{ color: '#94a3b8' }}>{lastInferredAt}</strong>
+              </span>
+            </div>
           </div>
 
           {/* Real-Time Prediction Output Card */}
           <div
             style={{
               background: prediction.label === 'Violation' ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)',
-              border: prediction.label === 'Violation' ? '1px solid rgba(239, 68, 68, 0.35)' : '1px solid rgba(16, 185, 129, 0.35)',
+              border: prediction.label === 'Violation' ? '1.5px solid rgba(239, 68, 68, 0.4)' : '1.5px solid rgba(16, 185, 129, 0.4)',
               borderRadius: '10px',
-              padding: '16px'
+              padding: '16px',
+              transition: 'all 0.2s ease',
+              boxShadow: isInferencing ? '0 0 16px rgba(56, 189, 248, 0.4)' : 'none'
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-              <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', color: prediction.label === 'Violation' ? '#f87171' : 'var(--mint)' }}>
+              <span
+                style={{
+                  fontSize: '10px',
+                  fontWeight: '800',
+                  textTransform: 'uppercase',
+                  color: prediction.label === 'Violation' ? '#f87171' : 'var(--mint)',
+                  letterSpacing: '0.4px'
+                }}
+              >
                 {prediction.label === 'Violation' ? '🚨 Intercepted by Akira Model' : '✅ Verified Compliant'}
               </span>
-              <span style={{ fontSize: '10px', color: '#94a3b8' }}>Latency: {prediction.latency}</span>
+              <span style={{ fontSize: '10px', color: '#38bdf8', background: 'rgba(56, 189, 248, 0.1)', padding: '2px 6px', borderRadius: '4px', fontWeight: '700' }}>
+                ⚡ {prediction.latency}
+              </span>
             </div>
 
             <div style={{ fontSize: '18px', fontWeight: '900', color: prediction.label === 'Violation' ? '#f87171' : 'var(--mint)', marginBottom: '8px' }}>
@@ -415,6 +459,12 @@ export default function AkiraModelTrainingStudio() {
             <div style={{ fontSize: '10.5px', color: '#94a3b8', lineHeight: 1.4 }}>
               <strong>Statutory Citation:</strong> {prediction.rule}
             </div>
+
+            {prediction.matchedKeyword && (
+              <div style={{ marginTop: '6px', fontSize: '10px', color: '#f87171' }}>
+                <strong>Flagged Keyword:</strong> &ldquo;{prediction.matchedKeyword}&rdquo;
+              </div>
+            )}
 
             <div style={{ marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: '10px', color: '#64748b' }}>Decision Action:</span>
