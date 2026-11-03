@@ -3,6 +3,7 @@ import confetti from 'canvas-confetti'
 import AkiraWorkflowPipeline from './components/AkiraWorkflowPipeline'
 import IntegrationsDashboard from './components/IntegrationsDashboard'
 import PdfBrochureScanner from './components/PdfBrochureScanner'
+import QuickStartWalkthroughBanner from './components/QuickStartWalkthroughBanner'
 import BenchmarkEvaluationSuite from './components/analytics/BenchmarkEvaluationSuite'
 import { BENCHMARK_50_CREATIVES } from './data/benchmark50Dataset'
 import {
@@ -2356,6 +2357,15 @@ export default function App() {
     return wsName.slice(0, 2).toUpperCase()
   }
 
+  // Quick Start / Guided Walkthrough Banner State (P0 Onboarding)
+  const [showQuickStartGuide, setShowQuickStartGuide] = useState(() => {
+    try {
+      return localStorage.getItem('brandguard_show_quickstart') !== 'false'
+    } catch (e) {
+      return true
+    }
+  })
+
   // "Start a Brand Review" Form Inputs (Image 1 & 2)
   const [brandName, setBrandName] = useState('')
   const [platform, setPlatform] = useState('')
@@ -3689,6 +3699,45 @@ export default function App() {
     }
   }
 
+  // ── First-Time User Guided Walkthrough Helper ──
+  const renderQuickStartGuide = () => (
+    <QuickStartWalkthroughBanner
+      currentUser={currentUser}
+      currentRole={currentRole}
+      onSwitchRole={handleSwitchUser}
+      onLoadReelSample={() => {
+        setActiveNav('New review')
+        setStudioMode('text')
+        setPlatform('Instagram Reels & Video Shorts')
+        const demo = `[Reel Hook]: Stop scrolling! Our new product guarantees 100% results overnight!\n[Body]: Join millions of user who have already switched and get flat 60% off today.\n[CTA]: Tap the link in bio with zero fees to order now!`
+        setMarketingDraft(demo)
+        triggerToast('Loaded Instagram Reel Script Template! 🎬')
+        setTimeout(() => {
+          const el = document.querySelector('.review-layout')
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 100)
+      }}
+      onApplyAllRewrites={() => {
+        setActiveNav('New review')
+        handleApplyAllRewrites()
+        setTimeout(() => {
+          const el = document.querySelector('.review-panel:nth-child(2)') || document.querySelector('.review-layout')
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        }, 150)
+      }}
+      onDismiss={() => {
+        setShowQuickStartGuide(false)
+        try { localStorage.setItem('brandguard_show_quickstart', 'false') } catch (e) {}
+        triggerToast('Quick Start Guide minimized. Reopen anytime from the top bar 💡')
+      }}
+      showGuide={showQuickStartGuide}
+      onReopenGuide={() => {
+        setShowQuickStartGuide(true)
+        try { localStorage.setItem('brandguard_show_quickstart', 'true') } catch (e) {}
+      }}
+    />
+  )
+
   // Handle Login Authentication for All 3 Roles
   const handleLogin = (user) => {
     setCurrentUser(user)
@@ -4050,7 +4099,7 @@ export default function App() {
               <p className="nav-label">Super Admin Console</p>
               {[
                 ['Overview', 'grid', null],
-                ['New review', 'sparkle', 'AI'],
+                ['New review', 'sparkle', '⭐ START'],
                 ['Review queue', 'inbox', dashboard.queue.filter((q) => q.status !== 'Approved').length || 3],
                 ['Benchmark Suite', 'chart', '50'],
                 ['Akira AI Pipeline', 'zap', 'v2.4'],
@@ -4090,7 +4139,7 @@ export default function App() {
               <p className="nav-label">Brand Manager Portal</p>
               {[
                 ['Overview', 'grid', null],
-                ['New review', 'sparkle', 'AI'],
+                ['New review', 'sparkle', '⭐ START'],
                 ['Review queue', 'inbox', dashboard.queue.filter((q) => q.status !== 'Approved').length || 3],
                 ['Benchmark Suite', 'chart', '50'],
                 ['Akira AI Pipeline', 'zap', 'v2.4'],
@@ -4129,7 +4178,7 @@ export default function App() {
               <p className="nav-label">Creator Content Studio</p>
               {[
                 ['Overview', 'grid', null],
-                ['New review', 'sparkle', 'AI'],
+                ['New review', 'sparkle', '⭐ START'],
                 ['Benchmark Suite', 'chart', '50'],
                 ['Akira AI Pipeline', 'zap', 'v2.4'],
                 ['Integrations & Automation', 'globe', '5'],
@@ -4258,6 +4307,32 @@ export default function App() {
 
           {/* Right Topbar Actions */}
           <div className="top-actions" style={{ gap: '12px' }}>
+            {/* Quick Start Guide Toggle Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setShowQuickStartGuide(prev => !prev)
+                try { localStorage.setItem('brandguard_show_quickstart', !showQuickStartGuide ? 'true' : 'false') } catch (e) {}
+              }}
+              style={{
+                background: showQuickStartGuide ? 'rgba(56, 189, 248, 0.15)' : 'rgba(255, 255, 255, 0.04)',
+                border: showQuickStartGuide ? '1px solid rgba(56, 189, 248, 0.4)' : '1px solid #1e3848',
+                color: showQuickStartGuide ? '#38bdf8' : '#88a0ad',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                fontSize: '11px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                transition: 'all 0.2s ease'
+              }}
+              title="Toggle 3-Step Guided Walkthrough"
+            >
+              <span>💡</span> Quick Start Guide
+            </button>
+
             {/* User Profile & Sign Out Button (Clicking Profile opens Governance Details - Image 1) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
               <div
@@ -4324,6 +4399,11 @@ export default function App() {
         </header>
 
         {/* ── FEATURE 1: OVERVIEW TAB (Role-Adaptive: Admin vs Manager vs Creator) ── */}
+        {activeNav === 'Overview' && (
+          <div style={{ width: 'min(1240px, 91%)', margin: '20px auto 0' }}>
+            {renderQuickStartGuide()}
+          </div>
+        )}
         {activeNav === 'Overview' && (
           currentUser?.portalType === 'admin' ? (
             <>
@@ -5313,6 +5393,7 @@ export default function App() {
         {/* ── FEATURE 2: NEW REVIEW TAB (From Image 1 & 2) ── */}
         {activeNav === 'New review' && (
           <section style={{ width: 'min(1240px, 91%)', margin: '20px auto 40px' }}>
+            {renderQuickStartGuide()}
             <section className="page-intro" style={{ width: '100%', margin: '0', padding: '16px 0 16px' }}>
               <div>
                 <p className="eyebrow">
