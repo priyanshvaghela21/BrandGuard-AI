@@ -3352,6 +3352,7 @@ export default function App() {
     }
   }
 
+
   // Calculate full suggested compliant text by applying all rewrites
   const getFullCompliantDraft = (originalDraft, issuesList) => {
     const textLower = (originalDraft || '').toLowerCase()
@@ -5615,18 +5616,24 @@ export default function App() {
                     />
                   </div>
 
-                  {/* MARKETING DRAFT CONTENT */}
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <label style={{ fontSize: '10px', fontWeight: '700', color: '#6e818b', letterSpacing: '0.8px', margin: 0 }}>
-                        MARKETING DRAFT CONTENT
-                      </label>
+                  {/* MARKETING DRAFT / REEL SCRIPT / AD COPY INPUT */}
+                  <div style={{ background: '#0e1820', border: '1px solid #1f323e', borderRadius: '10px', padding: '14px', marginTop: '10px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div>
+                        <label style={{ fontSize: '11px', fontWeight: '800', color: '#edf4f5', letterSpacing: '0.6px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <span>🎬</span> REEL SCRIPT / AD CAPTION / MARKETING DRAFT
+                        </label>
+                        <small style={{ fontSize: '10.5px', color: '#71848e', display: 'block', marginTop: '2px' }}>
+                          Paste your Reel script, ad caption, email copy, or billboard text here to test compliance.
+                        </small>
+                      </div>
+
                       {marketingDraft && (
                         <button
                           type="button"
                           onClick={() => setMarketingDraft('')}
                           style={{
-                            padding: '3px 9px',
+                            padding: '4px 10px',
                             borderRadius: '6px',
                             background: '#1d2226',
                             border: '1px solid #333a42',
@@ -5638,7 +5645,7 @@ export default function App() {
                             alignItems: 'center',
                             gap: '5px'
                           }}
-                          title="Clear marketing draft"
+                          title="Clear draft"
                         >
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 6h18" />
@@ -5651,17 +5658,59 @@ export default function App() {
                         </button>
                       )}
                     </div>
+
+                    {/* Quick Format Presets */}
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span style={{ fontSize: '10px', color: '#71848e', fontWeight: '700' }}>⚡ Quick Presets:</span>
+                      <button
+                        type="button"
+                        className="ghost-button"
+                        style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '4px', borderColor: '#263d4d', color: '#38bdf8' }}
+                        onClick={() => {
+                          setPlatform('Instagram Reels & Video Shorts')
+                          setMarketingDraft(`[Reel Hook]: Stop scrolling! Our new product guarantees 100% results overnight!\n[Body]: Join millions of user who have already switched and get flat 60% off today.\n[CTA]: Tap the link in bio with zero fees to order now!`)
+                          triggerToast('Loaded Instagram Reel Script Template!')
+                        }}
+                      >
+                        🎬 Reel / Video Script
+                      </button>
+                      <button
+                        type="button"
+                        className="ghost-button"
+                        style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '4px', borderColor: '#263d4d', color: 'var(--mint)' }}
+                        onClick={() => {
+                          setPlatform('Instagram Post & Story Ad')
+                          setMarketingDraft(`Celebrate with exclusive festive deals! Get up to 40% OFF on select orders* for all customers. Certified quality, fast doorstep delivery. T&C apply.*`)
+                          triggerToast('Loaded Social Ad Caption Template!')
+                        }}
+                      >
+                        📱 Social Ad Caption
+                      </button>
+                      <button
+                        type="button"
+                        className="ghost-button"
+                        style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '4px', borderColor: '#263d4d', color: '#fbbf24' }}
+                        onClick={() => {
+                          setPlatform('Email Newsletter & Promo')
+                          setMarketingDraft(`Exclusive Member Announcement: Zero consultation fees on eligible plans* when you book through our official app this week. Terms apply.*`)
+                          triggerToast('Loaded Email Promo Template!')
+                        }}
+                      >
+                        📧 Email Promo
+                      </button>
+                    </div>
+
                     <textarea
-                      rows={4}
+                      rows={5}
                       value={marketingDraft}
                       onChange={(e) => setMarketingDraft(e.target.value)}
-                      placeholder="Enter marketing creative, caption, email, banner copy, or ad draft to review..."
+                      placeholder="👉 Paste your Reel script, ad caption, or marketing draft here to test compliance against brand rules...&#10;&#10;Example:&#10;[Hook]: Stop scrolling! We guarantee 100% results for every user...&#10;[Offer]: Enjoy flat 60% off with zero fees today!&#10;[Call to action]: Download the app now!"
                       style={{
                         width: '100%',
-                        background: '#0d171e',
-                        border: '1px solid #263944',
+                        background: '#091217',
+                        border: '1px solid #233947',
                         borderRadius: '8px',
-                        padding: '10px 12px',
+                        padding: '12px 14px',
                         color: '#edf4f5',
                         fontSize: '12px',
                         lineHeight: '1.6',
@@ -5669,6 +5718,11 @@ export default function App() {
                         resize: 'vertical'
                       }}
                     />
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px', fontSize: '10px', color: '#64748b' }}>
+                      <span>✨ Akira AI scans every line for prohibited absolutes, discount caps, and missing asterisks (*)</span>
+                      <span>{marketingDraft.length} characters</span>
+                    </div>
                   </div>
 
                   {/* Run AI Analysis Button */}
@@ -6215,44 +6269,38 @@ export default function App() {
                                   >
                                     💡 COMPLIANT FIX
                                   </span>
-                                  <span
-                                    style={{
-                                      fontSize: '12px',
-                                      lineHeight: '1.55',
-                                      color: '#34d399',
-                                      fontWeight: '500',
-                                      flex: 1,
-                                      minWidth: '180px'
-                                    }}
-                                  >
-                                    {issue.fix || issue.rewrite}
-                                  </span>
-                                  {!isResolved && (
-                                    <button
-                                      type="button"
-                                      style={{
-                                        padding: '5px 12px',
-                                        fontSize: '10.5px',
-                                        fontWeight: '700',
-                                        background:
-                                          'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                                        color: '#ffffff',
-                                        border: 'none',
-                                        borderRadius: '5px',
-                                        cursor: 'pointer',
-                                        boxShadow:
-                                          '0 2px 6px rgba(16, 185, 129, 0.3)',
-                                        marginLeft: 'auto',
-                                        alignSelf: 'center'
-                                      }}
-                                      onClick={(e) => {
-                                        e.stopPropagation()
-                                        handleApplyRewrite(issue)
-                                      }}
-                                    >
-                                      Accept rewrite
-                                    </button>
-                                  )}
+                                  <div style={{ flex: 1, minWidth: '180px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <div style={{ fontSize: '12px', lineHeight: '1.55', color: '#34d399', fontWeight: '600' }}>
+                                      &ldquo;{issue.rewrite || issue.fix}&rdquo;
+                                    </div>
+                                    {!isResolved && (
+                                      <button
+                                        type="button"
+                                        style={{
+                                          padding: '8px 16px',
+                                          fontSize: '11.5px',
+                                          fontWeight: '800',
+                                          letterSpacing: '0.3px',
+                                          background: 'linear-gradient(135deg, #baf57f 0%, #10b981 100%)',
+                                          color: '#081711',
+                                          border: 'none',
+                                          borderRadius: '6px',
+                                          cursor: 'pointer',
+                                          boxShadow: '0 3px 12px rgba(186, 245, 127, 0.35)',
+                                          display: 'inline-flex',
+                                          alignItems: 'center',
+                                          gap: '6px',
+                                          width: 'fit-content'
+                                        }}
+                                        onClick={(e) => {
+                                          e.stopPropagation()
+                                          handleApplyRewrite(issue)
+                                        }}
+                                      >
+                                        <span>✨</span> 1-Click Smart Rewrite (Fix Instantly)
+                                      </button>
+                                    )}
+                                  </div>
                                 </div>
                               )}
                             </div>
