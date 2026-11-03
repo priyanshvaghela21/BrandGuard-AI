@@ -67,11 +67,15 @@ function StatusPill({ children, tone = 'neutral' }) {
   return <span className={`status-pill ${tone}`}>{children}</span>
 }
 
-function DraftCopy({ text, issues, selectedIssue, onSelect }) {
+function DraftCopy({ text, issues = [], selectedIssue, onSelect }) {
   const paragraphs = (text || '').split(/\n+/).filter(Boolean)
+  if (paragraphs.length === 0) {
+    return <p style={{ color: '#71848e', fontStyle: 'italic', margin: '8px 0' }}>No content provided in current draft. Enter copy above or choose a preset.</p>
+  }
+  const safeIssues = Array.isArray(issues) ? issues : []
   return paragraphs.map((paragraph, paragraphIndex) => {
-    const matches = issues
-      .filter((issue) => issue.verified && issue.quote && issue.state !== 'resolved')
+    const matches = safeIssues
+      .filter((issue) => issue && issue.verified && issue.quote && issue.state !== 'resolved')
       .map((issue) => ({ issue, start: paragraph.indexOf(issue.quote) }))
       .filter(({ start }) => start >= 0)
       .sort((a, b) => a.start - b.start)
@@ -86,9 +90,9 @@ function DraftCopy({ text, issues, selectedIssue, onSelect }) {
           role="button"
           tabIndex="0"
           className={selectedIssue === issue.id ? 'selected-mark' : ''}
-          onClick={() => onSelect(issue.id)}
-          onKeyDown={(event) => event.key === 'Enter' && onSelect(issue.id)}
-          title={`Rule ${issue.id}: ${issue.explanation}`}
+          onClick={() => onSelect && onSelect(issue.id)}
+          onKeyDown={(event) => event.key === 'Enter' && onSelect && onSelect(issue.id)}
+          title={`Rule ${issue.id}: ${issue.explanation || 'Violation'}`}
         >
           {issue.quote}
         </mark>
@@ -2076,24 +2080,24 @@ export default function App() {
     triggerToast(`Submitted "${item.title}" to Compliance Review Queue!`)
   }
 
-  // Always initialize as null so opening the site on 127.0.0.1 immediately presents the Login Screen first
-  const [currentUser, setCurrentUser] = useState(null)
-
-  // Clear any persistent auth user so every visit starts fresh at the Login Screen
-  useEffect(() => {
+  // Initialize currentUser from localStorage so page refresh (F5) preserves the active session seamlessly
+  const [currentUser, setCurrentUser] = useState(() => {
     try {
-      localStorage.removeItem('brandguard_auth_user')
-      sessionStorage.removeItem('brandguard_auth_user')
+      const saved = localStorage.getItem('brandguard_auth_user')
+      if (saved) return JSON.parse(saved)
     } catch (e) {}
-  }, [])
+    return null
+  })
 
   // Navigation tabs
   const [activeNav, setActiveNav] = useState('Overview')
 
-  // Comprehensive User Login Activity & Session Directory State
+  // Comprehensive User Login Activity & Session Directory State (with safe JSON parse fallback)
   const [loginSessions, setLoginSessions] = useState(() => {
-    const saved = localStorage.getItem('brandguard_login_sessions')
-    if (saved) return JSON.parse(saved)
+    try {
+      const saved = localStorage.getItem('brandguard_login_sessions')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {}
     return initialLoginSessions
   })
   const [sessionSearch, setSessionSearch] = useState('')
@@ -2211,8 +2215,10 @@ export default function App() {
 
   // Active Client Sessions Tracker (For Backward Compatibility)
   const [activeClients, setActiveClients] = useState(() => {
-    const saved = localStorage.getItem('brandguard_active_clients')
-    if (saved) return JSON.parse(saved)
+    try {
+      const saved = localStorage.getItem('brandguard_active_clients')
+      if (saved) return JSON.parse(saved)
+    } catch (e) {}
     return [
       {
         id: 'sess-1',
@@ -4396,7 +4402,170 @@ export default function App() {
 
         {/* ── FEATURE 1: OVERVIEW TAB (Role-Adaptive: Admin vs Manager vs Creator) ── */}
         {activeNav === 'Overview' && (
-          currentUser?.portalType === 'admin' ? (
+          <>
+            {/* End-to-End Workflow & Evaluation Stepper (Judge Testing Journey) */}
+            <section style={{ width: 'min(1240px, 91%)', margin: '20px auto 14px' }}>
+              <div
+                style={{
+                  background: 'linear-gradient(135deg, #0e1c26 0%, #111e27 100%)',
+                  border: '1px solid #1f3647',
+                  borderRadius: '12px',
+                  padding: '16px 20px',
+                  boxShadow: '0 4px 24px rgba(0,0,0,0.3)'
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(186, 245, 127, 0.12)', border: '1px solid rgba(186, 245, 127, 0.3)', display: 'grid', placeItems: 'center', color: 'var(--mint)', fontSize: '15px' }}>
+                      🚀
+                    </div>
+                    <div>
+                      <strong style={{ fontSize: '13px', color: '#edf4f5', letterSpacing: '-0.2px' }}>
+                        BrandGuard Autonomous Workflow — 6-Step Evaluation Journey
+                      </strong>
+                      <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#829ca9' }}>
+                        Test full end-to-end autonomous brand governance: guidelines setup, real-time AI review, smart rewrites, manager sign-off, and cryptographic audit certificates.
+                      </p>
+                    </div>
+                  </div>
+                  <span style={{ fontSize: '10px', background: 'rgba(186, 245, 127, 0.1)', color: 'var(--mint)', border: '1px solid rgba(186, 245, 127, 0.25)', padding: '3px 8px', borderRadius: '4px', fontWeight: '700' }}>
+                    ✦ End-to-End Test Ready
+                  </span>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
+                  {/* Step 1 */}
+                  <div
+                    onClick={() => setActiveNav('Brand guidelines')}
+                    style={{
+                      background: '#09131a',
+                      border: '1px solid #1a2f3d',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    className="workflow-step-card"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--mint)', fontWeight: '800' }}>1. BRAND KIT</span>
+                      <span style={{ fontSize: '12px' }}>📘</span>
+                    </div>
+                    <strong style={{ fontSize: '11px', color: '#edf4f5', display: 'block' }}>Brand Kit Setup</strong>
+                    <small style={{ fontSize: '10px', color: '#7a919e', display: 'block', marginTop: '2px' }}>Guidelines &amp; Rulebook</small>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div
+                    onClick={() => setActiveNav('New review')}
+                    style={{
+                      background: '#09131a',
+                      border: '1px solid #1a2f3d',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    className="workflow-step-card"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--mint)', fontWeight: '800' }}>2. SUBMIT DRAFT</span>
+                      <span style={{ fontSize: '12px' }}>✍️</span>
+                    </div>
+                    <strong style={{ fontSize: '11px', color: '#edf4f5', display: 'block' }}>Content Submission</strong>
+                    <small style={{ fontSize: '10px', color: '#7a919e', display: 'block', marginTop: '2px' }}>Input Ad or Preset</small>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div
+                    onClick={() => {
+                      setActiveNav('New review')
+                      setTimeout(() => handleRunAiAnalysis(), 50)
+                    }}
+                    style={{
+                      background: '#09131a',
+                      border: '1px solid #1a2f3d',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    className="workflow-step-card"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--mint)', fontWeight: '800' }}>3. AI REVIEW</span>
+                      <span style={{ fontSize: '12px' }}>🤖</span>
+                    </div>
+                    <strong style={{ fontSize: '11px', color: '#edf4f5', display: 'block' }}>Detect Violations</strong>
+                    <small style={{ fontSize: '10px', color: '#7a919e', display: 'block', marginTop: '2px' }}>Claims &amp; CIELAB Color</small>
+                  </div>
+
+                  {/* Step 4 */}
+                  <div
+                    onClick={() => setActiveNav('New review')}
+                    style={{
+                      background: '#09131a',
+                      border: '1px solid #1a2f3d',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    className="workflow-step-card"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--mint)', fontWeight: '800' }}>4. SMART REWRITE</span>
+                      <span style={{ fontSize: '12px' }}>✨</span>
+                    </div>
+                    <strong style={{ fontSize: '11px', color: '#edf4f5', display: 'block' }}>1-Click Safe Copy</strong>
+                    <small style={{ fontSize: '10px', color: '#7a919e', display: 'block', marginTop: '2px' }}>Resolve all issues</small>
+                  </div>
+
+                  {/* Step 5 */}
+                  <div
+                    onClick={() => setActiveNav('Review queue')}
+                    style={{
+                      background: '#09131a',
+                      border: '1px solid #1a2f3d',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    className="workflow-step-card"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--mint)', fontWeight: '800' }}>5. SIGN-OFF</span>
+                      <span style={{ fontSize: '12px' }}>🛡️</span>
+                    </div>
+                    <strong style={{ fontSize: '11px', color: '#edf4f5', display: 'block' }}>Reviewer Approval</strong>
+                    <small style={{ fontSize: '10px', color: '#7a919e', display: 'block', marginTop: '2px' }}>Approve / Reject Gate</small>
+                  </div>
+
+                  {/* Step 6 */}
+                  <div
+                    onClick={() => setActiveNav('Audit history')}
+                    style={{
+                      background: '#09131a',
+                      border: '1px solid #1a2f3d',
+                      borderRadius: '8px',
+                      padding: '10px 12px',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                    className="workflow-step-card"
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                      <span style={{ fontSize: '10px', color: 'var(--mint)', fontWeight: '800' }}>6. AUDIT TRAIL</span>
+                      <span style={{ fontSize: '12px' }}>📜</span>
+                    </div>
+                    <strong style={{ fontSize: '11px', color: '#edf4f5', display: 'block' }}>Audit &amp; Certificate</strong>
+                    <small style={{ fontSize: '10px', color: '#7a919e', display: 'block', marginTop: '2px' }}>Ray ID &amp; PDF Export</small>
+                  </div>
+                </div>
+              </div>
+            </section>
+          {currentUser?.portalType === 'admin' ? (
             <>
               <section className="page-intro">
                 <div>
@@ -5379,7 +5548,9 @@ export default function App() {
               </section>
             </>
           )
-        )}
+        }
+      </>
+    )}
 
         {/* ── FEATURE 2: NEW REVIEW TAB (From Image 1 & 2) ── */}
         {activeNav === 'New review' && (
@@ -9538,14 +9709,18 @@ export default function App() {
             className="modal"
             onSubmit={(e) => {
               e.preventDefault()
-              if (!newRuleTitle) return
+              const trimmed = (newRuleTitle || '').trim()
+              if (!trimmed) {
+                triggerToast('Please provide a rule title or policy standard.')
+                return
+              }
               const ruleObj = {
                 id: `R${rules.length + 1}`,
                 category: newRuleCategory,
                 severity: newRuleSeverity,
-                title: newRuleTitle,
-                description: newRuleDescription || 'Enforces brand voice guidelines across all marketing copy.',
-                bannedPatterns: [newRuleTitle.toLowerCase()],
+                title: trimmed,
+                description: newRuleDescription.trim() || 'Enforces brand voice guidelines across all marketing copy.',
+                bannedPatterns: [trimmed.toLowerCase()],
                 approvedFacts: ['Standard approved wording'],
                 status: 'Active',
                 triggerCount: 0

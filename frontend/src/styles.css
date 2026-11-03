@@ -77,6 +77,19 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, mark:focus-vi
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Authentication and security center */
+.workflow-step-card {
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.workflow-step-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--mint) !important;
+  background: #11202a !important;
+  box-shadow: 0 4px 14px rgba(186, 245, 127, 0.15);
+}
+.workflow-step-card:active {
+  transform: translateY(0);
+}
+
 .login-shell { position: relative; min-height: 100vh; overflow: hidden; color: var(--text); background: radial-gradient(circle at 70% 25%, #173b45 0, transparent 32%), radial-gradient(circle at 10% 100%, #182b32 0, transparent 30%), var(--canvas); }
 .login-topbar { position: relative; z-index: 1; height: 86px; display: flex; align-items: center; justify-content: space-between; width: min(1240px, 90%); margin: auto; }
 .login-brand { display: flex; align-items: center; gap: 11px; }.login-brand .brand-symbol { width: 38px; height: 38px; }.login-brand strong { display: block; font: 800 19px Manrope, sans-serif; letter-spacing: -1px; }.login-brand strong span { color: var(--mint); }.login-brand small { display: block; color: #748893; font-size: 9px; margin-top: 4px; }.secure-label { display: inline-flex; align-items: center; gap: 6px; color: #8ea5ae; font-size: 10px; }.secure-label svg { color: var(--mint); }
