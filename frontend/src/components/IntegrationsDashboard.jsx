@@ -426,7 +426,7 @@ export default function IntegrationsDashboard({
               gap: '6px'
             }}
           >
-            <span>🏗️</span> Delivery Architecture
+            <span>🏗️</span> Enterprise Cloud Architecture Blueprint (System Design for Developers/Judges)
           </button>
 
           <button
@@ -474,6 +474,45 @@ export default function IntegrationsDashboard({
       {/* TAB 1: INTEGRATIONS DASHBOARD */}
       {activeTab === 'dashboard' && (
         <div>
+          {/* Clarity Banner for Users & Judges */}
+          <div
+            style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(56, 189, 248, 0.06) 100%)',
+              border: '1px solid rgba(186, 245, 127, 0.25)',
+              borderRadius: '10px',
+              padding: '12px 18px',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px'
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '18px' }}>🔌</span>
+              <span style={{ fontSize: '12.5px', color: '#edf4f5', fontWeight: '600' }}>
+                Instant No-Code connectors for Figma, Canva, Slack, Meta &amp; CMS. <span style={{ color: 'var(--mint, #baf57f)' }}>Zero AWS configuration required for marketers.</span>
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setActiveTab('architecture')}
+              style={{
+                background: 'rgba(56, 189, 248, 0.1)',
+                border: '1px solid rgba(56, 189, 248, 0.4)',
+                color: '#38bdf8',
+                padding: '6px 14px',
+                borderRadius: '6px',
+                fontSize: '11px',
+                fontWeight: '700',
+                cursor: 'pointer'
+              }}
+            >
+              View System Design Blueprint (For Devs/Judges) →
+            </button>
+          </div>
+
           {/* Quick Metrics Bar */}
           <div
             style={{
