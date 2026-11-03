@@ -3629,41 +3629,7 @@ export default function App() {
           </div>
 
           {/* Right Topbar Actions */}
-          <div className="top-actions" style={{ gap: '12px', alignItems: 'center' }}>
-            {/* Quick Action: Start New Audit CTA (User-Friendly 1-Click Access) */}
-            <button
-              type="button"
-              onClick={() => setActiveNav('New review')}
-              title="Instantly audit a new Reel script, ad caption, or visual poster"
-              className="primary-button"
-              style={{
-                padding: '7px 14px',
-                fontSize: '11px',
-                borderRadius: '8px',
-                fontWeight: '700',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                cursor: 'pointer',
-                boxShadow: '0 0 16px rgba(186, 245, 127, 0.3)'
-              }}
-            >
-              <Icon name="sparkle" size={14} />
-              <span>Start New Audit</span>
-              <span
-                style={{
-                  fontSize: '9px',
-                  background: '#0b1510',
-                  color: 'var(--mint)',
-                  padding: '1px 5px',
-                  borderRadius: '4px',
-                  fontWeight: '800'
-                }}
-              >
-                1-CLICK
-              </span>
-            </button>
-
+          <div className="top-actions" style={{ gap: '12px' }}>
             {/* User Profile & Sign Out Button (Clicking Profile opens Governance Details - Image 1) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
               <div
