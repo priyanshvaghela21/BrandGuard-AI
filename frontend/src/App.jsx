@@ -449,6 +449,66 @@ function getBannerMetrics(bgColor, activeBrand = '') {
   }
 }
 
+// Derive high-level human descriptive title from any raw custom rule text
+function deriveSmartRuleTitle(line = '', rIdx = 0) {
+  const t = (line || '').trim()
+  const lower = t.toLowerCase()
+
+  // 1. Bracket/parentheses e.g. "Rule 1 (Delivery Disclaimer):" or "Rule 1 [Discount Cap]:"
+  const bracketMatch = t.match(/(?:Rule\s*\d+|^\d+)?[ \t]*[\(\[](.*?)[\)\]]/i)
+  if (bracketMatch && bracketMatch[1] && bracketMatch[1].trim().length > 2) {
+    const raw = bracketMatch[1].trim()
+    return raw.charAt(0).toUpperCase() + raw.slice(1)
+  }
+
+  // 2. Delivery & Speed
+  if (lower.includes('deliver') || lower.includes('10 min') || lower.includes('speed') || lower.includes('traffic') || lower.includes('doorstep')) {
+    return 'Express Delivery Disclaimer'
+  }
+
+  // 3. Discount & Pricing Caps
+  if (lower.includes('discount') || lower.includes('off') || lower.includes('sale') || lower.includes('cap') || lower.includes('%')) {
+    return 'Promotional Discount Policy'
+  }
+
+  // 4. Terminology / Customer vs User
+  if (lower.includes('user') || lower.includes('customer') || lower.includes('food lover') || lower.includes('patient') || lower.includes('terminology') || lower.includes('refer to')) {
+    return 'Brand Voice & Customer Terminology'
+  }
+
+  // 5. Comparatives & Superlatives
+  if (lower.includes('cheapest') || lower.includes('in the world') || lower.includes('#1') || lower.includes('competitor') || lower.includes('rival')) {
+    return 'Unsubstantiated Comparative Superlative'
+  }
+
+  // 6. Guarantees & Health/Cure
+  if (lower.includes('100% cure') || lower.includes('medical') || lower.includes('acne') || lower.includes('permanent')) {
+    return 'Medical Guarantee Prohibited'
+  }
+
+  // 7. Organic / Chemical-free / Purity
+  if (lower.includes('organic') || lower.includes('chemical') || lower.includes('pure') || lower.includes('natural')) {
+    return 'Product Formulation & Purity Claim'
+  }
+
+  // 8. Financial & Investment
+  if (lower.includes('money') || lower.includes('wealth') || lower.includes('invest') || lower.includes('savings')) {
+    return 'Financial Performance & Risk Policy'
+  }
+
+  // 9. Clean extraction fallback
+  let clean = t
+    .replace(/^(?:Rule\s*\d+[:\-–\.]*|\d+[\.\)\-:]*)\s*/i, '')
+    .replace(/^(?:never promise|never claim|do not claim|do not use|never use|prohibit|prohibits|avoid|ban|strictly|must not|mandate|ensure|use)\s+/i, '')
+    .split(/[:;,\.\(]/)[0]
+    .trim()
+  if (clean.length > 3 && clean.length < 45) {
+    return clean.charAt(0).toUpperCase() + clean.slice(1)
+  }
+
+  return `Brand Guideline ${rIdx + 1}`
+}
+
 // Human-Friendly Plain-Language Rule Name & Secondary Code Resolver
 function getHumanFriendlyRule(issue, fallbackIdx = 0) {
   if (!issue) {
@@ -471,7 +531,37 @@ function getHumanFriendlyRule(issue, fallbackIdx = 0) {
 
   const searchScope = `${issue.id || ''} ${issue.friendlyTitle || ''} ${issue.title || ''} ${issue.type || ''} ${issue.quote || ''} ${issue.explanation || ''}`.toLowerCase()
 
-  if (searchScope.includes('guarantee') || searchScope.includes('100%') || searchScope.includes('cure') || searchScope.includes('unsupported claim') || searchScope.includes('medical') || issue.id === 'R1') {
+  // Delivery & Speed takes precedence over general "guarantee"
+  if (searchScope.includes('deliver') || searchScope.includes('10 min') || searchScope.includes('speed') || searchScope.includes('doorstep')) {
+    return {
+      friendlyTitle: '✱ Express Delivery Disclaimer',
+      codeBadge: issue.id ? `Rule ${issue.id} · Delivery Policy` : `Rule R1 · Delivery Policy`,
+      categoryBadge: 'Pricing & Delivery Transparency',
+      plainSummary: 'Delivery speed promises require an asterisk (*) stating traffic/weather conditions.'
+    }
+  }
+
+  // Customer / Food Lover / Brand Voice Terminology
+  if (searchScope.includes('user') || searchScope.includes('food lover') || searchScope.includes('customer') || searchScope.includes('patient') || searchScope.includes('terminology') || searchScope.includes('nomenclature')) {
+    return {
+      friendlyTitle: '⚠️ Brand Voice & Customer Terminology',
+      codeBadge: issue.id ? `Rule ${issue.id} · Brand Voice` : `Rule R3 · Brand Voice`,
+      categoryBadge: 'Brand Voice Policy',
+      plainSummary: 'Mandates referring to individuals with human-first brand voice, not cold technical term "user".'
+    }
+  }
+
+  // Comparative Superlatives (cheapest in the world, etc.)
+  if (searchScope.includes('cheapest') || searchScope.includes('in the world') || searchScope.includes('#1 in the world') || searchScope.includes('competitor')) {
+    return {
+      friendlyTitle: '⚖️ Unsubstantiated Comparative Superlative',
+      codeBadge: issue.id ? `Rule ${issue.id} · Fair Advertising` : `Rule R4 · Fair Advertising`,
+      categoryBadge: 'Comparative Claims Directive',
+      plainSummary: 'Unverified superlative claims like "cheapest in the world" violate fair advertising rules.'
+    }
+  }
+
+  if (searchScope.includes('100% cure') || searchScope.includes('medical') || searchScope.includes('clinical') || (searchScope.includes('guarantee') && (searchScope.includes('cure') || searchScope.includes('health') || searchScope.includes('results')))) {
     return {
       friendlyTitle: '🚫 Medical Guarantee Prohibited',
       codeBadge: issue.id ? `Rule ${issue.id} · Clinical Claims` : `Rule R1 · Clinical Claims`,
@@ -2836,23 +2926,13 @@ export default function App() {
       .filter((l) => l.length > 0)
 
     ruleLines.forEach((line, rIdx) => {
-      let ruleTitle = `Rule ${rIdx + 1}`
+      const ruleTitle = deriveSmartRuleTitle(line, rIdx)
       let ruleBody = line
 
       // Extract rule number or heading if present
       const headerMatch = line.match(/^(?:Rule\s*\d+[:\-–\.]*|\d+[\.\)\-:]*)\s*(.*)$/i)
       if (headerMatch && headerMatch[1]) {
         ruleBody = headerMatch[1].trim()
-      }
-
-      // Derive concise title
-      const cleanTitle = ruleBody
-        .replace(/^(?:do not use|never use|do not claim|never claim|prohibit|prohibits|avoid|ban|strictly|must not)\s+/i, '')
-        .replace(/^use\s+/i, '')
-        .split(/[:;,]/)[0]
-        .trim()
-      if (cleanTitle.length > 3 && cleanTitle.length < 50) {
-        ruleTitle = cleanTitle.charAt(0).toUpperCase() + cleanTitle.slice(1)
       }
 
       // 1. Check for quoted terms in rule: '...', "...", `...`
