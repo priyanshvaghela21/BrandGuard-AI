@@ -67,17 +67,17 @@
 
     <!-- Feature Pills -->
     <g transform="translate(0, 116)">
-      <rect x="0" y="0" width="168" height="24" rx="12" fill="#0C1B2B" stroke="#22D3EE" stroke-opacity="0.25" stroke-width="1" />
-      <text x="12" y="16" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">⚡ Akira AI Supervised Core</text>
+      <rect x="0" y="0" width="175" height="26" rx="13" fill="#0C1B2B" stroke="#22D3EE" stroke-opacity="0.3" stroke-width="1" />
+      <text x="14" y="17" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">⚡ Akira AI Supervised Core</text>
 
-      <rect x="178" y="0" width="158" height="24" rx="12" fill="#0C1B2B" stroke="#34D399" stroke-opacity="0.25" stroke-width="1" />
-      <text x="12" y="16" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">🎨 CIELAB ΔE* Color Match</text>
+      <rect x="185" y="0" width="165" height="26" rx="13" fill="#0C1B2B" stroke="#34D399" stroke-opacity="0.3" stroke-width="1" />
+      <text x="199" y="17" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">🎨 CIELAB ΔE* Color Match</text>
 
-      <rect x="346" y="0" width="160" height="24" rx="12" fill="#0C1B2B" stroke="#A78BFA" stroke-opacity="0.25" stroke-width="1" />
-      <text x="12" y="16" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">🛡️ Mandatory Manager Gate</text>
+      <rect x="360" y="0" width="170" height="26" rx="13" fill="#0C1B2B" stroke="#A78BFA" stroke-opacity="0.3" stroke-width="1" />
+      <text x="374" y="17" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">🛡️ Mandatory Manager Gate</text>
 
-      <rect x="516" y="0" width="162" height="24" rx="12" fill="#0C1B2B" stroke="#F59E0B" stroke-opacity="0.25" stroke-width="1" />
-      <text x="12" y="16" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">📜 Cryptographic Audit PDF</text>
+      <rect x="540" y="0" width="165" height="26" rx="13" fill="#0C1B2B" stroke="#F59E0B" stroke-opacity="0.3" stroke-width="1" />
+      <text x="554" y="17" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">📜 Cryptographic Audit PDF</text>
     </g>
   </g>
 
