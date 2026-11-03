@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import AkiraModelTrainingStudio from './AkiraModelTrainingStudio'
 
 export default function AkiraWorkflowPipeline({
   currentReview,
@@ -128,6 +129,26 @@ export default function AkiraWorkflowPipeline({
             }}
           >
             🐳 Docker Architecture (Image 2)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveView('model')}
+            style={{
+              padding: '8px 14px',
+              borderRadius: '6px',
+              border: 0,
+              fontSize: '12px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              background: activeView === 'model' ? '#2563eb' : 'transparent',
+              color: activeView === 'model' ? '#ffffff' : '#8aa1ad',
+              transition: '0.2s',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <span>🧠</span> Trained AI Model (v2.4 Weights)
           </button>
         </div>
       </div>
@@ -884,7 +905,7 @@ export default function AkiraWorkflowPipeline({
             </div>
           </div>
         </div>
-      ) : (
+      ) : activeView === 'architecture' ? (
         /* DOCKER & FULL-STACK CONTAINER ARCHITECTURE (Matching Image 2) */
         <div
           style={{
@@ -1050,6 +1071,8 @@ export default function AkiraWorkflowPipeline({
             </small>
           </div>
         </div>
+      ) : (
+        <AkiraModelTrainingStudio />
       )}
     </div>
   )
