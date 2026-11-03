@@ -481,7 +481,7 @@ export default function BenchmarkEvaluationSuite({
           <div style={{ marginTop: '10px', display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(56, 189, 248, 0.12)', border: '1px solid rgba(56, 189, 248, 0.35)', borderRadius: '20px', padding: '6px 14px', fontSize: '12px', color: '#38bdf8', fontWeight: '700' }}>
             <span>📢 Plain-Language Summary:</span>
             <span style={{ color: '#edf4f5', fontWeight: '600' }}>
-              AI ne 25 me se {metrics.tp} galat ads pakad kar block kiye aur {metrics.tn} safe ads ko bina kisi false alarm ke pass kiya ({metrics.accuracy} Accuracy)
+              AI successfully intercepted {metrics.tp} of 25 non-compliant ads and verified {metrics.tn} compliant ads with zero false alarms ({metrics.accuracy} Accuracy)
             </span>
           </div>
         </div>
@@ -697,7 +697,7 @@ export default function BenchmarkEvaluationSuite({
               EXECUTIVE PLAIN-LANGUAGE SUMMARY (NON-TECHNICAL AUDIT REPORT)
             </div>
             <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#f8fafc', marginTop: '2px', lineHeight: 1.5 }}>
-              &ldquo;AI ne 25 me se {metrics.tp} galat ads pakad liye aur {metrics.tn} legal ads ko bilkul sahi verify kiya ({metrics.accuracy} Accuracy)!&rdquo;
+              &ldquo;AI successfully intercepted {metrics.tp} of 25 non-compliant ads and certified {metrics.tn} compliant ads without false alarms ({metrics.accuracy} Accuracy)!&rdquo;
             </div>
             <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '2px' }}>
               Zero false alarms for legal creatives, while intercepting deceptive promises, discount cap violations, and unverified medical/financial claims.
@@ -1451,7 +1451,7 @@ export default function BenchmarkEvaluationSuite({
                     💡 Simple Plain-Language Verdict:
                   </div>
                   <div style={{ fontSize: '12px', fontWeight: '700', color: '#f8fafc', marginTop: '2px', lineHeight: '1.4' }}>
-                    &ldquo;AI ne 25 me se {metrics.tp} galat ads pakad liye aur {metrics.tn} safe ads ko bina kisi false alarm ke pass kiya ({metrics.accuracy} Accuracy).&rdquo;
+                    &ldquo;AI intercepted {metrics.tp} of 25 non-compliant ads and certified {metrics.tn} compliant ads without false alarms ({metrics.accuracy} Accuracy).&rdquo;
                   </div>
                 </div>
 
@@ -1475,7 +1475,7 @@ export default function BenchmarkEvaluationSuite({
                   </div>
                   <div style={{ background: 'rgba(186, 245, 127, 0.12)', border: '2px solid var(--mint)', borderRadius: '8px', padding: '12px' }}>
                     <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--mint)' }}>{metrics.tp}</div>
-                    <strong style={{ fontSize: '11px', color: '#edf4f5' }}>Sahi Pakde (TP)</strong>
+                    <strong style={{ fontSize: '11px', color: '#edf4f5' }}>True Positive (TP)</strong>
                     <div style={{ fontSize: '9.5px', color: '#88a0ad' }}>Correctly caught violations</div>
                   </div>
                   <div style={{ background: 'rgba(255, 147, 117, 0.08)', border: '1px dashed rgba(255, 147, 117, 0.4)', borderRadius: '8px', padding: '12px' }}>
@@ -1495,7 +1495,7 @@ export default function BenchmarkEvaluationSuite({
                   </div>
                   <div style={{ background: 'rgba(186, 245, 127, 0.12)', border: '2px solid var(--mint)', borderRadius: '8px', padding: '12px' }}>
                     <div style={{ fontSize: '20px', fontWeight: '800', color: 'var(--mint)' }}>{metrics.tn}</div>
-                    <strong style={{ fontSize: '11px', color: '#edf4f5' }}>Sahi Safe Certified (TN)</strong>
+                    <strong style={{ fontSize: '11px', color: '#edf4f5' }}>True Negative (TN)</strong>
                     <div style={{ fontSize: '9.5px', color: '#88a0ad' }}>Safe ads cleared without delay</div>
                   </div>
                 </div>
