@@ -1067,12 +1067,7 @@ function LoginScreen({ onLogin }) {
     setRegisteredUsers(updatedUsers)
     try {
       localStorage.setItem('brandguard_registered_users', JSON.stringify(updatedUsers))
-      const savedList = localStorage.getItem('brandguard_workspaces_list')
-      const currentList = savedList ? JSON.parse(savedList) : ['CarePlus Health', 'DermaClean Herbal']
-      if (!currentList.includes(chosenWorkspace)) {
-        currentList.push(chosenWorkspace)
-        localStorage.setItem('brandguard_workspaces_list', JSON.stringify(currentList))
-      }
+      localStorage.setItem(`brandguard_workspaces_${trimmedEmail}`, JSON.stringify([chosenWorkspace]))
     } catch (e) {}
 
     // Pre-fill email in Sign In form and set success state
@@ -1860,29 +1855,52 @@ export default function App() {
   })
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false)
 
-  // Persistent List of All Available Workspaces (Default Presets + User Custom Workspaces)
-  const [workspacesList, setWorkspacesList] = useState(() => {
-    const defaults = ['CarePlus Health', 'DermaClean Herbal']
+  // Multi-Tenant Isolation: Strictly scopes workspaces to the active authenticated user
+  const getUserScopedWorkspaces = (user) => {
+    if (!user) return ['CarePlus Health', 'DermaClean Herbal']
+    const email = (user.email || '').trim().toLowerCase()
+
+    // 1. Try reading user-specific workspaces from localStorage
     try {
-      const savedList = localStorage.getItem('brandguard_workspaces_list')
-      let list = [...defaults]
-      if (savedList) {
-        const parsed = JSON.parse(savedList)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          list = Array.from(new Set([...defaults, ...parsed]))
-        }
+      const savedUserWs = localStorage.getItem(`brandguard_workspaces_${email}`)
+      if (savedUserWs) {
+        const parsed = JSON.parse(savedUserWs)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
       }
+    } catch (e) {}
+
+    // 2. Demo corporate accounts get CarePlus Health & DermaClean Herbal presets
+    const isDemoCorporateUser = [
+      'admin@brandguard.ai',
+      'sanskruti@brandguard.ai',
+      'sanskruti@careplus.com',
+      'manager@brandguard.ai',
+      'aarav@brandguard.ai',
+      'manager@careplus.com',
+      'creator@brandguard.ai',
+      'priyansh@careplus.com',
+      'client@brandguard.ai'
+    ].includes(email)
+
+    if (isDemoCorporateUser) {
+      return ['CarePlus Health', 'DermaClean Herbal']
+    }
+
+    // 3. For any custom user, strictly isolate to their own registered workspace!
+    const customWs = (user.workspace || user.company || user.organization || '').trim()
+    return customWs ? [customWs] : ['My Workspace']
+  }
+
+  // Workspaces strictly scoped to currentUser (No cross-company leakage)
+  const [workspacesList, setWorkspacesList] = useState(() => {
+    try {
       const savedUser = localStorage.getItem('brandguard_auth_user')
       if (savedUser) {
         const u = JSON.parse(savedUser)
-        const userWs = (u?.workspace || u?.company || u?.organization || '').trim()
-        if (userWs && !list.includes(userWs)) {
-          list.push(userWs)
-        }
+        return getUserScopedWorkspaces(u)
       }
-      return list
     } catch (e) {}
-    return defaults
+    return ['CarePlus Health', 'DermaClean Herbal']
   })
 
   // Brand Governance Configuration Settings State (Editable by Admin/Manager)
@@ -1955,19 +1973,11 @@ export default function App() {
       else if (currentUser.portalType === 'manager') setCurrentRole('brand_manager')
       else setCurrentRole('creator')
     }
-    const ws = (currentUser?.workspace || currentUser?.company || currentUser?.organization || '').trim()
-    if (ws) {
-      setActiveWorkspace(ws)
-      setWorkspacesList((prev) => {
-        if (!prev.includes(ws)) {
-          const updated = [...prev, ws]
-          try {
-            localStorage.setItem('brandguard_workspaces_list', JSON.stringify(updated))
-          } catch (e) {}
-          return updated
-        }
-        return prev
-      })
+    const scopedList = getUserScopedWorkspaces(currentUser)
+    setWorkspacesList(scopedList)
+    const targetWs = (currentUser?.workspace || currentUser?.company || scopedList[0] || 'CarePlus Health').trim()
+    if (targetWs) {
+      setActiveWorkspace(targetWs)
     }
   }, [currentUser])
 
@@ -2352,8 +2362,24 @@ export default function App() {
       handleLoadCarePlus()
       triggerToast('Switched to workspace: CarePlus Health (Health-Tech)')
     } else {
-      triggerToast(`Switched to workspace: ${brand} (Custom Registered Workspace)`)
+      triggerToast(`Switched to workspace: ${brand} (Brand Workspace)`)
     }
+  }
+
+  // Create & Add New Workspace under User's Isolated Account
+  const handleAddUserWorkspace = (newBrandName) => {
+    if (!newBrandName || !newBrandName.trim()) return
+    const brand = newBrandName.trim()
+    const email = (currentUser?.email || '').trim().toLowerCase()
+    const updated = Array.from(new Set([...workspacesList, brand]))
+    setWorkspacesList(updated)
+    setActiveWorkspace(brand)
+    setShowWorkspaceDropdown(false)
+    try {
+      localStorage.setItem(`brandguard_workspaces_${email}`, JSON.stringify(updated))
+      localStorage.setItem('brandguard_active_workspace', brand)
+    } catch (e) {}
+    triggerToast(`Created new workspace: ${brand} 🎉`)
   }
 
   // Download / Export Audit Certificate as JSON
@@ -3258,22 +3284,14 @@ export default function App() {
     setCurrentUser(user)
     localStorage.setItem('brandguard_auth_user', JSON.stringify(user))
 
-    const targetWs = (user?.workspace || user?.company || user?.organization || '').trim()
+    const scopedList = getUserScopedWorkspaces(user)
+    setWorkspacesList(scopedList)
+    const targetWs = (user?.workspace || user?.company || scopedList[0] || 'CarePlus Health').trim()
     if (targetWs) {
       setActiveWorkspace(targetWs)
       try {
         localStorage.setItem('brandguard_active_workspace', targetWs)
       } catch (e) {}
-      setWorkspacesList((prev) => {
-        if (!prev.includes(targetWs)) {
-          const updated = [...prev, targetWs]
-          try {
-            localStorage.setItem('brandguard_workspaces_list', JSON.stringify(updated))
-          } catch (e) {}
-          return updated
-        }
-        return prev
-      })
     }
 
     const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : ''
@@ -3569,6 +3587,36 @@ export default function App() {
                   </div>
                 )
               })}
+
+              {/* Add New Workspace CTA (Isolated to this user) */}
+              <div
+                style={{
+                  borderTop: '1px solid #1e303c',
+                  marginTop: '5px',
+                  paddingTop: '6px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  padding: '7px 10px',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  color: 'var(--mint)',
+                  fontSize: '11px',
+                  fontWeight: '600',
+                  transition: 'background 0.15s'
+                }}
+                onClick={() => {
+                  const newName = window.prompt('Enter new brand workspace name (e.g. Zomato Gold, Blinkit):')
+                  if (newName && newName.trim()) {
+                    handleAddUserWorkspace(newName.trim())
+                  }
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = '#14222c')}
+                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+              >
+                <Icon name="plus" size={13} />
+                <span>+ Add brand workspace</span>
+              </div>
             </div>
           )}
         </div>
