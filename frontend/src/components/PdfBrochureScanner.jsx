@@ -594,11 +594,9 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
     runDynamicAudit(demo.pages, demo.rules);
   };
 
-  // Run initial audit on load if not yet run
+  // Run dynamic audit whenever pages or custom rules change
   React.useEffect(() => {
-    if (!auditResults) {
-      runDynamicAudit();
-    }
+    runDynamicAudit(pages, customRulesText);
   }, [pages, customRulesText]);
 
   // Handle PDF file upload
@@ -1565,6 +1563,11 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
                   value={p.body}
                   onChange={(e) => {
                     const newBody = e.target.value;
+                    setResolvedPages((prev) => {
+                      const copy = { ...prev };
+                      delete copy[p.pageNumber];
+                      return copy;
+                    });
                     setPages(pages.map((item) => (item.pageNumber === p.pageNumber ? { ...item, body: newBody } : item)));
                   }}
                   placeholder="Page body text"
