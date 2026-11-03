@@ -902,13 +902,16 @@ function LoginScreen({ onLogin }) {
         }
         const u = data.user
         const portal = u.role?.toLowerCase().includes('admin') ? 'admin' : (u.role?.toLowerCase().includes('manager') ? 'manager' : 'creator')
+        const localUser = registeredUsers.find((r) => r.email.toLowerCase() === trimmedEmail)
+        const userWs = (localUser?.workspace || u.workspace || u.company || u.organization || 'CarePlus Health').trim()
         onLogin({
           email: u.email,
           name: u.full_name || u.name,
           role: portal === 'admin' ? 'admin' : (portal === 'manager' ? 'brand_manager' : 'creator'),
           portalType: portal,
           roleLabel: u.role_label || u.role,
-          workspace: u.company || 'CarePlus Health',
+          workspace: userWs,
+          company: userWs,
           jwtToken: data.token,
           securityMode: 'Bcrypt-12 + JWT-HS256'
         })
@@ -932,13 +935,15 @@ function LoginScreen({ onLogin }) {
         return
       }
 
+      const userWs = (foundUser.workspace || foundUser.company || 'CarePlus Health').trim()
       onLogin({
         email: foundUser.email,
         name: foundUser.name,
         role: foundUser.role,
         portalType: foundUser.portalType,
         roleLabel: foundUser.roleLabel,
-        workspace: foundUser.workspace || 'CarePlus Health'
+        workspace: userWs,
+        company: userWs
       })
     }
   }
@@ -1002,6 +1007,7 @@ function LoginScreen({ onLogin }) {
       assignedLabel = 'Content Creator'
     }
 
+    const chosenWorkspace = (signUpForm.workspace || '').trim() || 'CarePlus Health'
     const newUser = {
       name: signUpForm.fullName.trim(),
       email: trimmedEmail,
@@ -1009,12 +1015,31 @@ function LoginScreen({ onLogin }) {
       role: assignedRole,
       portalType: assignedPortal,
       roleLabel: assignedLabel,
-      workspace: signUpForm.workspace || 'CarePlus Health',
+      workspace: chosenWorkspace,
+      company: chosenWorkspace,
       jobTitle: signUpForm.jobTitle,
       department: signUpForm.department,
       employeeId: signUpForm.employeeId,
       registeredAt: new Date().toISOString()
     }
+
+    try {
+      fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: newUser.name,
+          email: newUser.email,
+          password: newUser.password,
+          role: newUser.roleLabel,
+          company: newUser.workspace,
+          job_title: newUser.jobTitle,
+          department: newUser.department,
+          employee_id: newUser.employeeId,
+          verification_code: signUpForm.verificationCode
+        })
+      }).catch(() => {})
+    } catch (e) {}
 
     // Save user in registered list & persist to localStorage
     const updatedUsers = [newUser, ...registeredUsers]
@@ -1793,7 +1818,19 @@ export default function App() {
   const [showAddRuleModal, setShowAddRuleModal] = useState(false)
 
   // Interactive Multi-Brand Workspace
-  const [activeWorkspace, setActiveWorkspace] = useState('CarePlus Health')
+  const [activeWorkspace, setActiveWorkspace] = useState(() => {
+    try {
+      const saved = localStorage.getItem('brandguard_active_workspace')
+      if (saved) return saved
+      const savedUser = localStorage.getItem('brandguard_auth_user')
+      if (savedUser) {
+        const u = JSON.parse(savedUser)
+        const ws = (u?.workspace || u?.company || u?.organization || '').trim()
+        if (ws) return ws
+      }
+    } catch (e) {}
+    return 'CarePlus Health'
+  })
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false)
 
   // Brand Governance Configuration Settings State (Editable by Admin/Manager)
@@ -1856,7 +1893,7 @@ export default function App() {
   const [currentRole, setCurrentRole] = useState('creator')
   const [currentUserName, setCurrentUserName] = useState('User')
 
-  // Synchronize currentUserName and currentRole whenever currentUser changes or updates
+  // Synchronize currentUserName, currentRole and activeWorkspace whenever currentUser changes
   useEffect(() => {
     if (currentUser?.name) {
       setCurrentUserName(currentUser.name)
@@ -1866,6 +1903,10 @@ export default function App() {
       else if (currentUser.portalType === 'manager') setCurrentRole('brand_manager')
       else setCurrentRole('creator')
     }
+    const ws = (currentUser?.workspace || currentUser?.company || currentUser?.organization || '').trim()
+    if (ws) {
+      setActiveWorkspace(ws)
+    }
   }, [currentUser])
 
   const effectiveUserName = currentUser?.name || currentUserName || 'User'
@@ -1874,6 +1915,13 @@ export default function App() {
     const parts = name.trim().split(/\s+/)
     if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
     return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  }
+
+  const getWorkspaceInitials = (wsName) => {
+    if (!wsName) return 'WS'
+    const parts = wsName.trim().split(/\s+/)
+    if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+    return wsName.slice(0, 2).toUpperCase()
   }
 
   // "Start a Brand Review" Form Inputs (Image 1 & 2)
@@ -3143,6 +3191,14 @@ export default function App() {
     setCurrentUser(user)
     localStorage.setItem('brandguard_auth_user', JSON.stringify(user))
 
+    const targetWs = (user?.workspace || user?.company || user?.organization || '').trim()
+    if (targetWs) {
+      setActiveWorkspace(targetWs)
+      try {
+        localStorage.setItem('brandguard_active_workspace', targetWs)
+      } catch (e) {}
+    }
+
     const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : ''
     let detectedDevice = 'Chrome 124 • Windows 11'
     if (userAgent.includes('Macintosh')) detectedDevice = 'Safari 17.4 • macOS Sonoma'
@@ -3338,8 +3394,19 @@ export default function App() {
             onClick={() => setShowWorkspaceDropdown(!showWorkspaceDropdown)}
             title="Click to switch brand workspace"
           >
-            <div className="workspace-logo" style={{ background: activeWorkspace === 'CarePlus Health' ? 'var(--mint)' : '#e5b869', color: '#0d151c' }}>
-              {activeWorkspace === 'CarePlus Health' ? 'CP' : 'DH'}
+            <div
+              className="workspace-logo"
+              style={{
+                background:
+                  activeWorkspace === 'CarePlus Health'
+                    ? 'var(--mint)'
+                    : activeWorkspace === 'DermaClean Herbal'
+                    ? '#e5b869'
+                    : '#38bdf8',
+                color: '#0d151c'
+              }}
+            >
+              {getWorkspaceInitials(activeWorkspace)}
             </div>
             <div className="workspace-copy">
               <small>WORKSPACE</small>
@@ -3365,6 +3432,33 @@ export default function App() {
                 boxShadow: '0 12px 30px rgba(0,0,0,0.6)'
               }}
             >
+              {/* Dynamic Option for Custom Workspace */}
+              {activeWorkspace !== 'CarePlus Health' && activeWorkspace !== 'DermaClean Herbal' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '9px',
+                    padding: '9px 10px',
+                    borderRadius: '7px',
+                    cursor: 'pointer',
+                    background: '#172833',
+                    color: 'var(--mint)',
+                    marginBottom: '4px'
+                  }}
+                  onClick={() => handleSwitchWorkspace(activeWorkspace)}
+                >
+                  <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: '#38bdf8', color: '#09120e', display: 'grid', placeItems: 'center', fontWeight: '800', fontSize: '10px' }}>
+                    {getWorkspaceInitials(activeWorkspace)}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <strong style={{ fontSize: '11px', display: 'block' }}>{activeWorkspace}</strong>
+                    <small style={{ fontSize: '9px', color: '#687d89' }}>Custom Registered Workspace • Active</small>
+                  </div>
+                  <Icon name="check" size={14} />
+                </div>
+              )}
+
               <div
                 style={{
                   display: 'flex',

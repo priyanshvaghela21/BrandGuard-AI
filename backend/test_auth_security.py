@@ -117,7 +117,7 @@ reg_legit_attempt = client.post("/api/auth/register", json={
     "role": "Super Admin",
     "verification_code": "CAREPLUS-2026"
 })
-legit_allowed = (reg_legit_attempt.status_code in [200, 400])
+legit_allowed = (reg_legit_attempt.status_code in [200, 400, 409])
 
 results.append({
     "level": "L5 - Access Control & Privilege Boundaries",

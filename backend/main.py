@@ -1265,7 +1265,8 @@ def auth_login(req: LoginRequest, request: Request):
         "email": authenticated_user.get("email"),
         "role": authenticated_user.get("role") or "Creator",
         "role_label": authenticated_user.get("role_label") or authenticated_user.get("role"),
-        "company": authenticated_user.get("organization") or authenticated_user.get("company", "CarePlus Health"),
+        "company": authenticated_user.get("workspace") or authenticated_user.get("organization") or authenticated_user.get("company", "CarePlus Health"),
+        "workspace": authenticated_user.get("workspace") or authenticated_user.get("organization") or authenticated_user.get("company", "CarePlus Health"),
         "job_title": authenticated_user.get("job_title", "Member"),
         "employee_id": authenticated_user.get("employee_id", "CP-1042")
     }
