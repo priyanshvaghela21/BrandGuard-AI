@@ -1067,6 +1067,12 @@ function LoginScreen({ onLogin }) {
     setRegisteredUsers(updatedUsers)
     try {
       localStorage.setItem('brandguard_registered_users', JSON.stringify(updatedUsers))
+      const savedList = localStorage.getItem('brandguard_workspaces_list')
+      const currentList = savedList ? JSON.parse(savedList) : ['CarePlus Health', 'DermaClean Herbal']
+      if (!currentList.includes(chosenWorkspace)) {
+        currentList.push(chosenWorkspace)
+        localStorage.setItem('brandguard_workspaces_list', JSON.stringify(currentList))
+      }
     } catch (e) {}
 
     // Pre-fill email in Sign In form and set success state
@@ -1854,6 +1860,31 @@ export default function App() {
   })
   const [showWorkspaceDropdown, setShowWorkspaceDropdown] = useState(false)
 
+  // Persistent List of All Available Workspaces (Default Presets + User Custom Workspaces)
+  const [workspacesList, setWorkspacesList] = useState(() => {
+    const defaults = ['CarePlus Health', 'DermaClean Herbal']
+    try {
+      const savedList = localStorage.getItem('brandguard_workspaces_list')
+      let list = [...defaults]
+      if (savedList) {
+        const parsed = JSON.parse(savedList)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          list = Array.from(new Set([...defaults, ...parsed]))
+        }
+      }
+      const savedUser = localStorage.getItem('brandguard_auth_user')
+      if (savedUser) {
+        const u = JSON.parse(savedUser)
+        const userWs = (u?.workspace || u?.company || u?.organization || '').trim()
+        if (userWs && !list.includes(userWs)) {
+          list.push(userWs)
+        }
+      }
+      return list
+    } catch (e) {}
+    return defaults
+  })
+
   // Brand Governance Configuration Settings State (Editable by Admin/Manager)
   const [governanceConfig, setGovernanceConfig] = useState(() => {
     try {
@@ -1927,6 +1958,16 @@ export default function App() {
     const ws = (currentUser?.workspace || currentUser?.company || currentUser?.organization || '').trim()
     if (ws) {
       setActiveWorkspace(ws)
+      setWorkspacesList((prev) => {
+        if (!prev.includes(ws)) {
+          const updated = [...prev, ws]
+          try {
+            localStorage.setItem('brandguard_workspaces_list', JSON.stringify(updated))
+          } catch (e) {}
+          return updated
+        }
+        return prev
+      })
     }
   }, [currentUser])
 
@@ -2301,12 +2342,17 @@ export default function App() {
   const handleSwitchWorkspace = (brand) => {
     setActiveWorkspace(brand)
     setShowWorkspaceDropdown(false)
+    try {
+      localStorage.setItem('brandguard_active_workspace', brand)
+    } catch (e) {}
     if (brand === 'DermaClean Herbal') {
       handleLoadDermaClean()
       triggerToast('Switched to workspace: DermaClean Herbal (D2C Cosmetics)')
-    } else {
+    } else if (brand === 'CarePlus Health') {
       handleLoadCarePlus()
       triggerToast('Switched to workspace: CarePlus Health (Health-Tech)')
+    } else {
+      triggerToast(`Switched to workspace: ${brand} (Custom Registered Workspace)`)
     }
   }
 
@@ -3218,6 +3264,16 @@ export default function App() {
       try {
         localStorage.setItem('brandguard_active_workspace', targetWs)
       } catch (e) {}
+      setWorkspacesList((prev) => {
+        if (!prev.includes(targetWs)) {
+          const updated = [...prev, targetWs]
+          try {
+            localStorage.setItem('brandguard_workspaces_list', JSON.stringify(updated))
+          } catch (e) {}
+          return updated
+        }
+        return prev
+      })
     }
 
     const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : ''
@@ -3453,79 +3509,66 @@ export default function App() {
                 boxShadow: '0 12px 30px rgba(0,0,0,0.6)'
               }}
             >
-              {/* Dynamic Option for Custom Workspace */}
-              {activeWorkspace !== 'CarePlus Health' && activeWorkspace !== 'DermaClean Herbal' && (
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '9px',
-                    padding: '9px 10px',
-                    borderRadius: '7px',
-                    cursor: 'pointer',
-                    background: '#172833',
-                    color: 'var(--mint)',
-                    marginBottom: '4px'
-                  }}
-                  onClick={() => handleSwitchWorkspace(activeWorkspace)}
-                >
-                  <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: '#38bdf8', color: '#09120e', display: 'grid', placeItems: 'center', fontWeight: '800', fontSize: '10px' }}>
-                    {getWorkspaceInitials(activeWorkspace)}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <strong style={{ fontSize: '11px', display: 'block' }}>{activeWorkspace}</strong>
-                    <small style={{ fontSize: '9px', color: '#687d89' }}>Custom Registered Workspace • Active</small>
-                  </div>
-                  <Icon name="check" size={14} />
-                </div>
-              )}
+              {/* Dynamic list of all persistent workspaces including user's custom registered workspace */}
+              {workspacesList.map((wsName) => {
+                const isCurrent = activeWorkspace === wsName
+                const isCarePlus = wsName === 'CarePlus Health'
+                const isDerma = wsName === 'DermaClean Herbal'
+                const bg = isCarePlus ? 'var(--mint)' : isDerma ? '#e5b869' : '#38bdf8'
+                const tag = isCarePlus
+                  ? 'Health-Tech • Navy & Teal'
+                  : isDerma
+                  ? 'Cosmetics / D2C • Forest & Gold'
+                  : 'Custom Registered Workspace'
 
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '9px',
-                  padding: '9px 10px',
-                  borderRadius: '7px',
-                  cursor: 'pointer',
-                  background: activeWorkspace === 'CarePlus Health' ? '#172833' : 'transparent',
-                  color: activeWorkspace === 'CarePlus Health' ? 'var(--mint)' : '#c4d1d6'
-                }}
-                onClick={() => handleSwitchWorkspace('CarePlus Health')}
-              >
-                <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: 'var(--mint)', color: '#09120e', display: 'grid', placeItems: 'center', fontWeight: '800', fontSize: '10px' }}>
-                  CP
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong style={{ fontSize: '11px', display: 'block' }}>CarePlus Health</strong>
-                  <small style={{ fontSize: '9px', color: '#687d89' }}>Health-Tech • Navy &amp; Teal</small>
-                </div>
-                {activeWorkspace === 'CarePlus Health' && <Icon name="check" size={14} />}
-              </div>
-
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '9px',
-                  padding: '9px 10px',
-                  borderRadius: '7px',
-                  cursor: 'pointer',
-                  marginTop: '2px',
-                  background: activeWorkspace === 'DermaClean Herbal' ? '#172833' : 'transparent',
-                  color: activeWorkspace === 'DermaClean Herbal' ? 'var(--mint)' : '#c4d1d6'
-                }}
-                onClick={() => handleSwitchWorkspace('DermaClean Herbal')}
-              >
-                <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: '#e5b869', color: '#09120e', display: 'grid', placeItems: 'center', fontWeight: '800', fontSize: '10px' }}>
-                  DH
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <strong style={{ fontSize: '11px', display: 'block' }}>DermaClean Herbal</strong>
-                  <small style={{ fontSize: '9px', color: '#687d89' }}>Cosmetics / D2C • Forest &amp; Gold</small>
-                </div>
-                {activeWorkspace === 'DermaClean Herbal' && <Icon name="check" size={14} />}
-              </div>
+                return (
+                  <div
+                    key={wsName}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '9px',
+                      padding: '9px 10px',
+                      borderRadius: '7px',
+                      cursor: 'pointer',
+                      marginBottom: '2px',
+                      background: isCurrent ? '#172833' : 'transparent',
+                      color: isCurrent ? 'var(--mint)' : '#c4d1d6',
+                      transition: 'background 0.15s'
+                    }}
+                    onClick={() => handleSwitchWorkspace(wsName)}
+                    onMouseEnter={(e) => {
+                      if (!isCurrent) e.currentTarget.style.background = '#14222c'
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isCurrent) e.currentTarget.style.background = 'transparent'
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '6px',
+                        background: bg,
+                        color: '#09120e',
+                        display: 'grid',
+                        placeItems: 'center',
+                        fontWeight: '800',
+                        fontSize: '10px'
+                      }}
+                    >
+                      {getWorkspaceInitials(wsName)}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <strong style={{ fontSize: '11px', display: 'block' }}>{wsName}</strong>
+                      <small style={{ fontSize: '9px', color: '#687d89' }}>
+                        {tag} {isCurrent ? '• Active' : ''}
+                      </small>
+                    </div>
+                    {isCurrent && <Icon name="check" size={14} />}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>
