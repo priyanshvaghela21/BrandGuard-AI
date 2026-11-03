@@ -479,9 +479,10 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
 
     // Common statutory compliance triggers
     const triggerWords = [
-      'cure', 'guarantee', 'guaranteed', '100%', 'zero fee', 'zero fees', 'miracle', 'miraculous',
+      'cure', 'cures', 'guarantee', 'guaranteed', '100%', 'zero fee', 'zero fees', 'miracle', 'miraculous',
       'lowest price', 'cheapest', 'free', 'risk-free', 'unsubstantiated', 'superlative', 'overnight',
-      'best in the world', 'instant', 'no risk', 'endorsed by all'
+      'best in the world', 'instant', 'no risk', 'endorsed by all', 'permanent', 'permanently',
+      'organic', 'chemicals', 'chemical-free', 'discount', '70% off', 'off', 'baldness', 'acne'
     ];
     triggerWords.forEach((tw) => {
       if (ruleDesc.toLowerCase().includes(tw) && !keywords.includes(tw)) {
@@ -499,59 +500,109 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
 
     targetPages.forEach((p) => {
       const pageText = p.body;
+      const lowerText = pageText.toLowerCase();
       const pageBboxes = [];
+      const occupiedSpans = [];
 
+      // Collect all rule keywords
+      const allRuleKeywords = [];
       parsedRules.forEach((rule) => {
         const keywords = extractRuleKeywords(rule.desc);
-
-        // Check if page contains any keyword
         keywords.forEach((kw) => {
-          const lowerText = pageText.toLowerCase();
-          const matchIdx = lowerText.indexOf(kw);
-          if (matchIdx !== -1) {
-            // Find surrounding sentence or phrase
-            const start = Math.max(0, pageText.lastIndexOf('.', matchIdx) + 1);
-            let end = pageText.indexOf('.', matchIdx);
-            if (end === -1) end = pageText.length;
-            const fullSentence = pageText.slice(start, end).trim();
+          if (kw && kw.length >= 2) {
+            allRuleKeywords.push({
+              ruleId: rule.id,
+              ruleDesc: rule.desc,
+              kw: kw.toLowerCase()
+            });
+          }
+        });
+      });
 
-            const violatingPhrase = pageText.slice(matchIdx, matchIdx + kw.length);
+      // Sort by keyword length descending so longest, most specific phrases match first!
+      allRuleKeywords.sort((a, b) => b.kw.length - a.kw.length);
 
-            // Avoid duplicate bounding boxes for the same text
-            const alreadyExists = pageBboxes.some((b) => b.violatingText.toLowerCase() === kw);
-            if (!alreadyExists) {
-              // Generate clean, professional smart rewrite with legal rationale
-              let rewrite = "provides comprehensive healthcare coverage*";
-              let rationale = "Replaced absolute claim with qualified coverage statement to comply with ASCI Guidelines.";
-              if (kw.includes("zero fee") || kw.includes("free")) {
-                rewrite = "with transparent subsidized packages* (T&C Apply)";
-                rationale = "ASCI Free Claims Guidelines require explicit terms and disclosure of hidden administrative costs.";
-              } else if (kw.includes("cure") || kw.includes("guarantee")) {
-                rewrite = "provides comprehensive wellness coverage*";
-                rationale = "Consumer Protection Act 2019 Sec. 21 prohibits guaranteed cures without peer-reviewed clinical trials.";
-              } else if (kw.includes("cheapest") || kw.includes("lowest")) {
+      allRuleKeywords.forEach(({ ruleId, ruleDesc, kw }) => {
+        let searchIndex = 0;
+        while (searchIndex < lowerText.length) {
+          const matchIdx = lowerText.indexOf(kw, searchIndex);
+          if (matchIdx === -1) break;
+
+          const matchEnd = matchIdx + kw.length;
+          searchIndex = matchIdx + 1;
+
+          // Check if this match overlaps with any already occupied span (prevents duplicate sub-slices)
+          const overlaps = occupiedSpans.some(
+            (span) => Math.max(span.start, matchIdx) < Math.min(span.end, matchEnd)
+          );
+
+          if (!overlaps) {
+            // Check word boundaries
+            const isWordStart = matchIdx === 0 || /[\s\.,;:'"!?\-]/.test(lowerText[matchIdx - 1]);
+            const isWordEnd = matchEnd === lowerText.length || /[\s\.,;:'"!?\-]/.test(lowerText[matchEnd]);
+
+            if (isWordStart && isWordEnd) {
+              occupiedSpans.push({ start: matchIdx, end: matchEnd });
+
+              // Find surrounding sentence
+              const start = Math.max(0, pageText.lastIndexOf('.', matchIdx) + 1);
+              let end = pageText.indexOf('.', matchIdx);
+              if (end === -1) end = pageText.length;
+              const fullSentence = pageText.slice(start, end).trim();
+
+              const violatingPhrase = pageText.slice(matchIdx, matchEnd);
+
+              // Context-aware legal rewrite & rationale
+              const lowerPhrase = violatingPhrase.toLowerCase();
+              let rewrite = "compliant terms applied* (T&C Apply)";
+              let rationale = "Replaced absolute claim with qualified statement to comply with ASCI Code.";
+
+              if (lowerPhrase.includes("delivery") || lowerPhrase.includes("shipping")) {
+                rewrite = "free delivery on eligible orders above ₹199* (T&C Apply)";
+                rationale = "ASCI Free Delivery Guidelines require clear disclosure of minimum order value with asterisk (*).";
+              } else if (lowerPhrase.includes("10 min") || lowerPhrase.includes("minute") || lowerPhrase.includes("fastest")) {
+                rewrite = "express priority delivery* (Subject to Weather & Traffic Conditions)";
+                rationale = "ASCI Guidelines prohibit guaranteed instant delivery without safety and transit disclaimers.";
+              } else if (lowerPhrase.includes("zero fee") || lowerPhrase.includes("free fee") || lowerPhrase.includes("zero delivery")) {
+                rewrite = "zero delivery fees on orders above ₹199* (T&C Apply)";
+                rationale = "ASCI Free Claims Guidelines require explicit disclosure of minimum spend and terms.";
+              } else if (lowerPhrase.includes("discount") || lowerPhrase.includes("70%") || lowerPhrase.includes("off") || lowerPhrase.includes("cashback")) {
+                rewrite = "special promotional savings up to 40% OFF* (T&C Apply)";
+                rationale = "Brand pricing governance restricts unauthorized predatory discounts exceeding statutory limits.";
+              } else if (lowerPhrase.includes("cure") || lowerPhrase.includes("guarantee") || lowerPhrase.includes("permanent") || lowerPhrase.includes("baldness") || lowerPhrase.includes("acne")) {
+                rewrite = "clinically tested wellness support* (Results May Vary)";
+                rationale = "Consumer Protection Act 2019 Sec. 21 prohibits guaranteed cures or permanent claims without peer-reviewed clinical trials.";
+              } else if (lowerPhrase.includes("organic") || lowerPhrase.includes("chemical")) {
+                rewrite = "formulated with certified botanical ingredients*";
+                rationale = "Drugs & Cosmetics Act prohibits unsubstantiated 100% chemical-free claims in cosmetic advertising.";
+              } else if (lowerPhrase.includes("return") || lowerPhrase.includes("profit") || lowerPhrase.includes("wealth") || lowerPhrase.includes("invest")) {
+                rewrite = "targeted wealth growth potential* (Market Investments Subject to Risk)";
+                rationale = "SEBI Regulations prohibit guaranteed returns without risk disclosures.";
+              } else if (lowerPhrase.includes("cheapest") || lowerPhrase.includes("lowest")) {
                 rewrite = "at competitive standardized rates*";
                 rationale = "ASCI Superlative Claims Code prohibits unsubstantiated lowest-price claims without comparative market data.";
-              } else {
-                rewrite = "under verified compliance guidelines*";
-                rationale = "Statutory qualification added to prevent misleading representation.";
               }
 
               pageBboxes.push({
-                id: `bbox-${rule.id}-${pageBboxes.length + 1}`,
-                ruleId: rule.id,
-                ruleDesc: rule.desc,
+                id: `bbox-${ruleId}-${pageBboxes.length + 1}`,
+                ruleId: ruleId,
+                ruleDesc: ruleDesc,
                 violatingText: violatingPhrase,
                 violatingSentence: fullSentence,
                 compliantText: rewrite,
                 legalRationale: rationale,
-                reason: `Triggered by user custom rule "${rule.id}": "${rule.desc}"`,
-                severity: "High"
+                reason: `Triggered by user custom rule "${ruleId}": "${ruleDesc}"`,
+                severity: "High",
+                startIdx: matchIdx,
+                endIdx: matchEnd
               });
             }
           }
-        });
+        }
       });
+
+      // Sort bounding boxes by position in the text
+      pageBboxes.sort((a, b) => a.startIdx - b.startIdx);
 
       newResults[p.pageNumber] = {
         issuesCount: pageBboxes.length,
@@ -1618,7 +1669,7 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
               </button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 380px))', gap: '16px' }}>
               {pages.map((p) => {
                 const isSelected = activePageNum === p.pageNumber;
                 const pageResult = auditResults && auditResults[p.pageNumber];
@@ -1641,6 +1692,7 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '8px',
+                      maxWidth: '440px',
                       boxShadow: isSelected 
                         ? (!isResolved && issuesCount > 0 ? '0 0 20px rgba(255, 68, 68, 0.35)' : '0 0 20px rgba(186, 245, 127, 0.3)')
                         : '0 4px 12px rgba(0,0,0,0.4)',
@@ -1652,7 +1704,6 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
                       style={{
                         position: 'relative',
                         width: '100%',
-                        aspectRatio: '16 / 10',
                         borderRadius: '8px',
                         overflow: 'hidden',
                         background: '#081117',
@@ -1677,28 +1728,29 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
                       </div>
 
                       {/* Miniature Simulated Document Page Body with Glowing Box */}
-                      <div style={{ padding: '6px 8px', display: 'flex', flexDirection: 'column', gap: '3px', flex: 1, justifyContent: 'center', background: '#0a141b' }}>
-                        <div style={{ fontSize: '9px', fontWeight: '800', color: '#edf4f5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      <div style={{ padding: '8px 10px', display: 'flex', flexDirection: 'column', gap: '5px', background: '#0a141b' }}>
+                        <div style={{ fontSize: '11px', fontWeight: '800', color: '#edf4f5', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {p.headline}
                         </div>
                         {/* Miniature Visual Bounding Box Indicator */}
                         <div
                           style={{
-                            fontSize: '7.5px',
-                            lineHeight: '1.25',
-                            padding: '3px 5px',
-                            borderRadius: '4px',
-                            background: !isResolved && issuesCount > 0 ? 'rgba(255, 68, 68, 0.2)' : 'rgba(186, 245, 127, 0.08)',
+                            fontSize: '10.5px',
+                            lineHeight: '1.45',
+                            padding: '6px 8px',
+                            borderRadius: '5px',
+                            background: !isResolved && issuesCount > 0 ? 'rgba(255, 68, 68, 0.15)' : 'rgba(186, 245, 127, 0.08)',
                             border: !isResolved && issuesCount > 0 ? '1px dashed #ff4444' : '1px solid rgba(186, 245, 127, 0.25)',
                             color: !isResolved && issuesCount > 0 ? '#ffb3b3' : '#b2dfdb',
-                            whiteSpace: 'nowrap',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
+                            whiteSpace: 'normal',
+                            wordBreak: 'break-word',
+                            maxHeight: '110px',
+                            overflowY: 'auto',
                             position: 'relative'
                           }}
                         >
                           {!isResolved && issuesCount > 0 ? (
-                            <span style={{ color: '#ff7777', fontWeight: '700' }}>[⚠️ Violation Box] {p.body}</span>
+                            <span><strong style={{ color: '#ff6666' }}>[⚠️ Flagged Content]:</strong> {p.body}</span>
                           ) : (
                             <span>{p.body}</span>
                           )}
@@ -1706,7 +1758,7 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
                       </div>
 
                       {/* Miniature Page Footer Bar */}
-                      <div style={{ padding: '3px 8px', background: '#060e13', borderTop: '1px solid #13222d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '7px', color: '#668090' }}>
+                      <div style={{ padding: '4px 8px', background: '#060e13', borderTop: '1px solid #13222d', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '8px', color: '#668090' }}>
                         <span>PDF Sheet {p.pageNumber}/{pages.length}</span>
                         <span style={{ color: p.dominantColor || 'var(--mint)', fontWeight: '700' }}>{p.dominantColor || '#001F3F'}</span>
                       </div>
@@ -1778,6 +1830,15 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
                 </span>
                 <strong style={{ fontSize: '14px', color: 'var(--mint)', fontWeight: '900' }}>
                   ₹{(Math.max(1, pages.length) * 10).toLocaleString('en-IN')},00,000 Saved
+                </strong>
+              </div>
+              <div style={{ height: '24px', width: '1px', background: '#2c4250' }} />
+              <div>
+                <span style={{ fontSize: '10px', color: isCurrentPageResolved ? 'var(--mint)' : '#ff9375', textTransform: 'uppercase', fontWeight: '800', display: 'block' }}>
+                  Compliance Score:
+                </span>
+                <strong style={{ fontSize: '14px', color: isCurrentPageResolved ? 'var(--mint)' : '#ff5555', fontWeight: '900' }}>
+                  {isCurrentPageResolved ? '100 / 100 (Safe 🟢)' : `${Math.max(18, 100 - activePageResult.issuesCount * 18)} / 100 (Blocked 🔴)`}
                 </strong>
               </div>
             </div>
@@ -1947,7 +2008,7 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
                             🔴 RED LIGHT: UNLAWFUL CLAIMS
                           </span>
                           <span style={{ fontSize: '11px', color: '#ff8a8a', fontWeight: '700' }}>
-                            {activePageResult.issuesCount} Statutory Violation(s) Flagged
+                            {isCurrentPageResolved ? 'Violations Remediated by AI' : `${activePageResult.issuesCount} Statutory Violation(s) Flagged`}
                           </span>
                         </div>
                         <span style={{ fontSize: '10px', color: '#ff6666', background: 'rgba(255, 51, 51, 0.18)', border: '1px solid #ff3333', padding: '2px 8px', borderRadius: '4px', fontWeight: '800' }}>
@@ -2356,6 +2417,57 @@ export default function PdfBrochureScanner({ onSubmitToQueue, hideHeader = false
                     {isCurrentPageResolved ? '0 Violations' : `${activePageResult.issuesCount} Detected`}
                   </span>
                 </div>
+
+                {/* 🌟 Prominent Live Compliance Score Card */}
+                {(() => {
+                  const score = isCurrentPageResolved ? 100 : Math.max(18, 100 - activePageResult.issuesCount * 18);
+                  const isSafe = isCurrentPageResolved || activePageResult.issuesCount === 0;
+                  return (
+                    <div
+                      style={{
+                        padding: '12px 14px',
+                        borderRadius: '10px',
+                        background: isSafe
+                          ? 'linear-gradient(135deg, rgba(186, 245, 127, 0.12), rgba(8, 38, 24, 0.3))'
+                          : 'linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(45, 10, 15, 0.35))',
+                        border: `1.5px solid ${isSafe ? 'var(--mint)' : '#ff4d4d'}`,
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '14px',
+                        boxShadow: isSafe ? '0 0 16px rgba(186, 245, 127, 0.2)' : '0 0 16px rgba(255, 77, 77, 0.25)'
+                      }}
+                    >
+                      <div>
+                        <span style={{ fontSize: '10px', color: isSafe ? 'var(--mint)' : '#ff9375', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.6px', display: 'block' }}>
+                          AUDIT COMPLIANCE SCORE
+                        </span>
+                        <div style={{ fontSize: '24px', fontWeight: '900', color: isSafe ? 'var(--mint)' : '#ff5555', fontFamily: 'Manrope, sans-serif', marginTop: '2px' }}>
+                          {score} / 100
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: '900',
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                            background: isSafe ? 'rgba(186, 245, 127, 0.2)' : 'rgba(255, 68, 68, 0.25)',
+                            color: isSafe ? 'var(--mint)' : '#ff8585',
+                            border: `1px solid ${isSafe ? 'var(--mint)' : '#ff4d4d'}`,
+                            display: 'inline-block'
+                          }}
+                        >
+                          {isSafe ? 'CLEARED TO PUBLISH 🟢' : 'PUBLISHING BLOCKED 🔴'}
+                        </span>
+                        <small style={{ display: 'block', fontSize: '10px', color: '#88a6b8', marginTop: '3px' }}>
+                          {isSafe ? '100% Rules Satisfied' : `${activePageResult.issuesCount} Statutory Violations`}
+                        </small>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {isCurrentPageResolved ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', padding: '16px', background: 'rgba(186, 245, 127, 0.08)', borderRadius: '10px', border: '1px solid rgba(186, 245, 127, 0.25)' }}>
