@@ -1,6 +1,7 @@
 import re
 from typing import Dict, Any, List
 from app.schemas.review import IssueSchema
+from app.ai.akira_classifier import classify_ad_compliance
 
 class AIRoutingEngine:
     """
@@ -77,7 +78,12 @@ class AIRoutingEngine:
         if any(w in text_lower for w in ["skin", "organic", "blemish", "derma"]):
             context_tags.append("[Cosmetic Efficacy Guidelines]")
 
+        ml_res = classify_ad_compliance(text)
+        if ml_res.get("is_violation"):
+            toxicity_score = min(toxicity_score, int(max(20, (1.0 - ml_res.get("confidence", 0.8)) * 100)))
+
         return {
+            "akira_ml_model": ml_res,
             "toxicity_score": f"{toxicity_score}% Brand Safe",
             "toxicity_raw": toxicity_score,
             "sentiment": sentiment,
