@@ -1,0 +1,88 @@
+<svg width="1200" height="320" viewBox="0 0 1200 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#070A14" />
+      <stop offset="0.5" stop-color="#0E172A" />
+      <stop offset="1" stop-color="#061824" />
+    </linearGradient>
+    <linearGradient id="accent" x1="120" y1="40" x2="1080" y2="280" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8" />
+      <stop offset="0.48" stop-color="#22D3EE" />
+      <stop offset="1" stop-color="#34D399" />
+    </linearGradient>
+    <linearGradient id="shieldGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8" />
+      <stop offset="1" stop-color="#10B981" />
+    </linearGradient>
+    <linearGradient id="borderGrad" x1="0" y1="0" x2="1200" y2="320" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8" stop-opacity="0.6" />
+      <stop offset="0.5" stop-color="#22D3EE" stop-opacity="0.2" />
+      <stop offset="1" stop-color="#34D399" stop-opacity="0.6" />
+    </linearGradient>
+    <radialGradient id="glowLeft" cx="0" cy="0" r="1" gradientTransform="translate(200 80) rotate(45) scale(450 320)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0284C7" stop-opacity="0.28" />
+      <stop offset="1" stop-color="#0284C7" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="glowRight" cx="0" cy="0" r="1" gradientTransform="translate(1000 240) rotate(-135) scale(420 300)" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#10B981" stop-opacity="0.25" />
+      <stop offset="1" stop-color="#10B981" stop-opacity="0" />
+    </radialGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0H0V36" stroke="#38BDF8" stroke-opacity="0.05" />
+    </pattern>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="12" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="320" rx="16" fill="url(#bg)" />
+  <rect width="1200" height="320" rx="16" fill="url(#grid)" />
+  <rect width="1200" height="320" rx="16" fill="url(#glowLeft)" />
+  <rect width="1200" height="320" rx="16" fill="url(#glowRight)" />
+  <rect x="1" y="1" width="1198" height="318" rx="15" stroke="url(#borderGrad)" stroke-width="1.5" />
+
+  <!-- Shield Icon (Left Side) -->
+  <g transform="translate(100, 95)">
+    <circle cx="65" cy="65" r="54" fill="#0E1E2E" stroke="#38BDF8" stroke-opacity="0.3" stroke-width="2" />
+    <path d="M65 30L95 44V72C95 92 82 110 65 116C48 110 35 92 35 72V44L65 30Z" fill="url(#shieldGrad)" />
+    <path d="M65 35L88 47V71C88 88 77 103 65 109C53 103 42 88 42 71V47L65 35Z" fill="#07121F" />
+    <path d="M54 70L62 78L78 58" stroke="url(#accent)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
+
+  <!-- Content Group -->
+  <g transform="translate(255, 95)">
+    <!-- Category Pill -->
+    <rect x="0" y="0" width="195" height="26" rx="13" fill="#0F2438" stroke="#38BDF8" stroke-opacity="0.4" stroke-width="1" />
+    <text x="14" y="17" fill="#38BDF8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="700" letter-spacing="1.2">ENTERPRISE GOVERNANCE</text>
+
+    <!-- Main Title -->
+    <text x="0" y="62" fill="url(#accent)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="44" font-weight="900" letter-spacing="-0.5">BRANDGUARD AI</text>
+
+    <!-- Subtitle -->
+    <text x="0" y="94" fill="#94A3B8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="16" font-weight="400">
+      Autonomous Pre-Publication Brand Review &amp; Multi-Channel Governance Platform
+    </text>
+
+    <!-- Feature Pills -->
+    <g transform="translate(0, 116)">
+      <rect x="0" y="0" width="168" height="24" rx="12" fill="#0C1B2B" stroke="#22D3EE" stroke-opacity="0.25" stroke-width="1" />
+      <text x="12" y="16" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">⚡ Akira AI Supervised Core</text>
+
+      <rect x="178" y="0" width="158" height="24" rx="12" fill="#0C1B2B" stroke="#34D399" stroke-opacity="0.25" stroke-width="1" />
+      <text x="12" y="16" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">🎨 CIELAB ΔE* Color Match</text>
+
+      <rect x="346" y="0" width="160" height="24" rx="12" fill="#0C1B2B" stroke="#A78BFA" stroke-opacity="0.25" stroke-width="1" />
+      <text x="12" y="16" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">🛡️ Mandatory Manager Gate</text>
+
+      <rect x="516" y="0" width="162" height="24" rx="12" fill="#0C1B2B" stroke="#F59E0B" stroke-opacity="0.25" stroke-width="1" />
+      <text x="12" y="16" fill="#E2E8F0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="11" font-weight="500">📜 Cryptographic Audit PDF</text>
+    </g>
+  </g>
+
+  <!-- Accent Highlights -->
+  <circle cx="1110" cy="55" r="4" fill="#34D399" opacity="0.8" />
+  <circle cx="1140" cy="70" r="2.5" fill="#22D3EE" opacity="0.6" />
+  <circle cx="1085" cy="85" r="2" fill="#A78BFA" opacity="0.5" />
+</svg>

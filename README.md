@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=7,15,22&height=220&section=header&text=🛡️%20BrandGuard%20AI&fontSize=48&fontColor=ffffff&fontAlignY=38&desc=Autonomous%20Pre-Publication%20Brand%20Review%20%26%20Multi-Channel%20Governance%20Platform&descFontSize=18&descAlignY=62&descColor=22D3EE" alt="BrandGuard AI Header" width="100%" />
+  <img src="./assets/brandguard-banner.svg" alt="BrandGuard AI Header" width="100%" />
 </div>
 
 <p align="center">
@@ -344,5 +344,5 @@ To evaluate the complete end-to-end user journey, follow these steps:
   <p>
     <sub>Designed with curiosity · Built with intent · Shipped from India 🇮🇳</sub>
   </p>
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=7,15,22&height=100&section=footer" alt="Footer decoration" width="100%" />
+  <img src="./assets/footer-wave.svg" alt="Footer decoration" width="100%" />
 </div>
