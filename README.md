@@ -75,11 +75,13 @@ Unmonitored publishing exposes brands to severe regulatory penalties (FTC Truth-
 - **📊 50-Creative Golden Benchmark:** Live empirical accuracy matrix tracking True Positives, False Positives, True Negatives, and False Negatives against 50 gold-standard marketing creatives.
 
 ### 🔐 Governance, Security & Workspaces
-- **👥 Enterprise Role-Based Access Control (RBAC):** Strict permission enforcement across Super Admin, Brand Manager, Content Creator, and Workspace User.
-- **🛡️ Human-in-the-Loop Sign-Off Gate:** Autonomous publishing is strictly blocked; only authenticated Brand Managers can release digital approvals.
+- **👥 Enterprise Role-Based Access Control (RBAC):** Strict permission enforcement across Super Admin, Brand Manager, Content Creator, and Workspace User (`user@brandguard.ai` with dedicated Read-Only governance mode).
+- **🛡️ Human-in-the-Loop Sign-Off Gate & Governance Lock:** Autonomous publishing is strictly blocked; Manager approval is dynamically locked (`Resolve Violations First 🔒`) until all high-risk claims are resolved via 1-Click Smart Rewrite.
+- **⚡ Vercel Cloud Serverless Microservices:** Live production endpoints (`/api/auth/login`, `/api/auth/register`, `/api/auth/me`, `/api/webhooks/brand-review`, `/api/reviews/evaluate`) with PBKDF2-SHA512 password hashing and HttpOnly SameSite cookies.
 - **🏢 Multi-Tenant Workspace Isolation:** Brand boundaries with pre-configured scenarios (*CarePlus Health*, *DermaClean Herbal*, *Zomato*, *Blinkit*, *Swiggy*) and custom workspace certification.
 - **🌐 Enterprise Webhook & Ingestion Hub:** Ingests external JSON payloads with HMAC-SHA256 signature verification for Figma, Canva, Slack, and REST APIs.
 - **🔒 Cloudflare Turnstile Human Verification:** Authentic vector cloud branding with state-driven bot protection.
+- **🛡️ Enterprise Security Headers:** Hardened against clickjacking and MIME-sniffing with `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, and `Referrer-Policy: strict-origin-when-cross-origin`.
 - **📜 Cryptographic Audit Ledger & PDF Export:** Immutable audit log storing Cloudflare Ray IDs, reviewer signatures, before/after diffs, and downloadable PDF compliance certificates.
 - **🛡️ Fault Tolerance & Crash-Proofing:** Global React ErrorBoundary, persistent local-storage session rehydration across reloads (`F5`), and graceful empty-state guards.
 
@@ -280,6 +282,27 @@ Interactive Swagger documentation is available at `http://127.0.0.1:8000/docs`.
 | `GET` | `/history` | Fetch immutable audit ledger and Ray IDs | All Roles |
 | `POST` | `/api/download-remediated-pdf` | Generate certified compliance PDF certificate | All Roles |
 
+### 🧪 Live Cloud Serverless Endpoints (Instant Judge Verification)
+
+You can test BrandGuard's live serverless APIs directly via `curl`:
+
+```bash
+# 1. Test Serverless Authentication & Cookie Generation
+curl -X POST https://brandguard-zeta.vercel.app/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@brandguard.ai", "password": "admin123"}'
+
+# 2. Test Enterprise Ingestion Webhook (Figma / Slack / REST)
+curl -X POST https://brandguard-zeta.vercel.app/api/webhooks/brand-review \
+  -H "Content-Type: application/json" \
+  -d '{"brand": "CarePlus Health", "content": "Our miracle formula cures acne in 8 hours!"}'
+
+# 3. Test Server-Side Compliance Scoring Engine
+curl -X POST https://brandguard-zeta.vercel.app/api/reviews/evaluate \
+  -H "Content-Type: application/json" \
+  -d '{"draftText": "Dermatologist-tested skincare regimen formulated for healthy skin."}'
+```
+
 ---
 
 ## 10. Quick Installation Commands
@@ -314,12 +337,12 @@ To evaluate the complete end-to-end user journey, follow these steps:
 
 | Step | Action | What to Inspect |
 |---|---|---|
-| **1. Authentication** | Open [Live Demo](https://brandguard-zeta.vercel.app/) and click **Creator** Fast-Fill. | 10-field enterprise sign-up modal, Cloudflare Turnstile bot check, instant session rehydration. |
+| **1. Authentication** | Open [Live Demo](https://brandguard-zeta.vercel.app/) and sign in with any role (or `user@brandguard.ai` to test Read-Only mode). | 10-field enterprise sign-up modal, Cloudflare Turnstile bot check, server-side JWT authentication. |
 | **2. Brand Kit Setup** | Navigate to **"Brand guidelines"** and **"Rulebook"**. | Tone criteria, primary hex palette, active rule toggles, and "Add Brand Rule" modal. |
-| **3. Content Submission** | In **"New review"**, click **"DermaClean Acne Cure"** preset. | Draft editor telemetry, character/word counters, and platform tags. |
+| **3. Content Submission** | In **"New review"**, click **"DermaClean Acne Cure"** preset. | Draft editor telemetry, character/word counters, platform tags (read-only for Workspace User). |
 | **4. AI Review & Color Check** | Click **"⚡ Run AI Analysis"**. | Live 4-stage scan terminal, highlighted violation tokens, and CIELAB $\Delta E^*$ color deviation score. |
 | **5. Smart Rewrite** | Click **"1-Click Smart Rewrite"**. | Offending claims replaced instantly with 100% compliant copy; score jumps to Certified Safe. |
-| **6. Sign-off & Audit** | Switch to **Brand Manager**, open **"Review queue"**, click **"Approve"**. | Digital approval stamp, audit entry with Ray ID, and downloadable cryptographic PDF certificate. |
+| **6. Sign-off & Audit** | Switch to **Brand Manager**; observe Approve is locked until violations are resolved, then click **"Approve"**. | Digital approval stamp, audit entry with Ray ID, and downloadable cryptographic PDF certificate. |
 
 ### Judge Fast-Fill Accounts
 - 👑 **Super Admin:** `admin@brandguard.ai` | `admin123`
