@@ -7239,6 +7239,9 @@ export default function App() {
               onNavigateToQueue={() => setActiveNav('Review queue')}
               onNavigateToAudit={() => setActiveNav('Audit history')}
               onTriggerWebhook={(item) => {
+                if (typeof handleTriggerWebhook === 'function') {
+                  handleTriggerWebhook(item);
+                }
                 const qItem = {
                   id: item.event_id || ('wh_' + Date.now()),
                   title: item.content_title || 'Inbound Webhook Creative',
@@ -7253,9 +7256,9 @@ export default function App() {
                   source: (item.source || 'WEBHOOK').toUpperCase(),
                   content: item.content_text,
                   assetUrl: item.content_url
-                }
-                handleAddQueueItem(qItem)
-                return { status: 'Enqueued', riskScore: 82, findings: 3 }
+                };
+                handleAddQueueItem(qItem);
+                return { status: 'Enqueued', riskScore: 82, findings: 3 };
               }}
             />
           </section>
