@@ -266,54 +266,167 @@ const CAREPLUS_SCENARIO = {
   brandName: 'CarePlus Health',
   platform: 'Social media banner & digital ads',
   rulesText:
-    'Rule 1: Do not claim unqualified 100% medical guarantees or cures.\nRule 2: Mandated terminology: Refer to individuals as "customer", "patient", or "member", never "user".\nRule 3: Brand palette requires approved Navy #001F3F and Teal #0E7C86 with WCAG AA compliance.',
+    'Rule 1 (Medical Guarantees): Do not claim unqualified 100% medical guarantees or cures.\nRule 2 (Approved Terminology): Refer to individuals as "customer", "patient", or "member", never "user".\nRule 3 (Visual Brand Match): Brand palette requires approved Navy #001F3F (≥95% color match) and Teal #0E7C86 with WCAG AA compliance.\nRule 4 (Fee Disclaimers): Any zero-fee or free consultation offer must include an asterisk (*) with conditions.',
   draftText:
     'Meet the future of healthcare with CarePlus. Our app guarantees 100% results for every user, so you can spend less time worrying and more time living.\n\nJoin millions of user this Diwali and discover care that puts you first. Download today.'
 }
 
-// CIELAB Delta-E and WCAG 2.1 Contrast Calculator for Visual Banner Audit
+// Human-Centric Color Match & Contrast Calculator for Visual Banner Audit
 function getBannerMetrics(bgColor) {
   const norm = (bgColor || '').trim().toLowerCase()
   if (norm === '#001f3f') {
     return {
       deltaE: '0.4',
       deltaEPass: true,
+      colorMatchPercent: 99,
+      colorMatchLabel: 'Brand Color Perfect (Pass)',
+      colorMatchBadge: 'Color Match: 99% (Brand Color Perfect)',
       contrast: '14.2:1',
       contrastPass: true,
+      contrastLabel: 'Ultra High Readability (AAA Pass)',
       wcagLevel: 'AAA Compliant',
       colorName: 'Approved Deep Navy (#001F3F)',
-      statusNote: 'Matches primary brand color with high contrast legibility.'
+      statusNote: 'Perfect visual match to primary brand color. High contrast legibility.',
+      formulaExplainer: 'CIELAB ΔE* = 0.4 (CIE94 space — imperceptible to human eye)'
     }
   } else if (norm === '#0e7c86') {
     return {
       deltaE: '1.2',
       deltaEPass: true,
+      colorMatchPercent: 98,
+      colorMatchLabel: 'Brand Color Perfect (Pass)',
+      colorMatchBadge: 'Color Match: 98% (Brand Color Perfect)',
       contrast: '4.8:1',
       contrastPass: true,
+      contrastLabel: 'Clean Legibility (AA Pass)',
       wcagLevel: 'AA Compliant',
       colorName: 'Approved Ocean Teal (#0E7C86)',
-      statusNote: 'Within brand secondary accent tolerance (ΔE < 5.0).'
+      statusNote: 'Within brand secondary accent tolerance (98% match).',
+      formulaExplainer: 'CIELAB ΔE* = 1.2 (CIE94 space — virtually imperceptible shift)'
     }
   } else if (norm === '#9851e0') {
     return {
       deltaE: '38.4',
       deltaEPass: false,
+      colorMatchPercent: 12,
+      colorMatchLabel: 'Off-Brand Color Alert (Rejected)',
+      colorMatchBadge: 'Color Match: 12% (Severe Color Deviation)',
       contrast: '2.3:1',
       contrastPass: false,
+      contrastLabel: 'Poor Contrast - Hard to Read (Failed)',
       wcagLevel: 'Failed AA (< 4.5:1)',
       colorName: 'Prohibited Neon Purple (#9851E0)',
-      statusNote: 'Off-brand hue detected. Deviates by 38.4 CIELAB from brand palette.'
+      statusNote: 'Off-brand color detected. Only 12% match to approved brand palette.',
+      formulaExplainer: 'CIELAB ΔE* = 38.4 (CIE94 space — exceeds 12.0 tolerance)'
     }
   } else {
     return {
       deltaE: '18.7',
       deltaEPass: false,
+      colorMatchPercent: 55,
+      colorMatchLabel: 'Noticeable Color Drift (Needs Review)',
+      colorMatchBadge: 'Color Match: 55% (Noticeable Drift)',
       contrast: '3.2:1',
       contrastPass: false,
+      contrastLabel: 'Sub-Optimal Contrast (Failed AA)',
       wcagLevel: 'Failed AA',
       colorName: `Custom Color (${bgColor})`,
-      statusNote: 'Color deviation exceeds brand CIELAB tolerance threshold.'
+      statusNote: 'Color deviation exceeds brand tolerance threshold.',
+      formulaExplainer: 'CIELAB ΔE* = 18.7 (CIE94 space — exceeds 12.0 tolerance)'
     }
+  }
+}
+
+// Human-Friendly Plain-Language Rule Name & Secondary Code Resolver
+function getHumanFriendlyRule(issue, fallbackIdx = 0) {
+  if (!issue) {
+    return {
+      friendlyTitle: 'Brand Policy Guideline',
+      codeBadge: `Rule R${fallbackIdx + 1}`,
+      categoryBadge: 'Brand Compliance',
+      plainSummary: 'Draft content deviates from approved brand standards.'
+    }
+  }
+
+  if (issue.friendlyTitle && issue.codeBadge) {
+    return {
+      friendlyTitle: issue.friendlyTitle,
+      codeBadge: issue.codeBadge,
+      categoryBadge: issue.category || issue.categoryBadge || 'Brand Policy',
+      plainSummary: issue.plainSummary || issue.explanation
+    }
+  }
+
+  const searchScope = `${issue.id || ''} ${issue.friendlyTitle || ''} ${issue.title || ''} ${issue.type || ''} ${issue.quote || ''} ${issue.explanation || ''}`.toLowerCase()
+
+  if (searchScope.includes('guarantee') || searchScope.includes('100%') || searchScope.includes('cure') || searchScope.includes('unsupported claim') || searchScope.includes('medical') || issue.id === 'R1') {
+    return {
+      friendlyTitle: '🚫 Medical Guarantee Prohibited',
+      codeBadge: issue.id ? `Rule ${issue.id} · Clinical Claims` : `Rule R1 · Clinical Claims`,
+      categoryBadge: 'FTC & Health Claims Policy',
+      plainSummary: 'Ads cannot promise 100% cure or unconditional results without clinical proof.'
+    }
+  }
+
+  if (searchScope.includes('asterisk') || searchScope.includes('zero fee') || searchScope.includes('free') || searchScope.includes('disclaimer') || issue.id === 'R4' || searchScope.includes('pricing transparency')) {
+    return {
+      friendlyTitle: '✱ Missing Asterisk Disclaimer',
+      codeBadge: issue.id ? `Rule ${issue.id} · Zero-Fee Offers` : `Rule R4 · Zero-Fee Offers`,
+      categoryBadge: 'Pricing Transparency & ASCI',
+      plainSummary: 'Any "Free" or "Zero Fee" claim requires an asterisk (*) stating qualification terms.'
+    }
+  }
+
+  if (searchScope.includes('color') || searchScope.includes('cielab') || searchScope.includes('palette') || searchScope.includes('contrast') || searchScope.includes('purple') || issue.id === 'R3') {
+    return {
+      friendlyTitle: '🎨 Brand Color & Visual Match',
+      codeBadge: issue.id ? `Rule ${issue.id} · Palette & Legibility` : `Rule R3 · Palette & Legibility`,
+      categoryBadge: 'Visual Design Standards',
+      plainSummary: 'Creative colors must match approved brand hex codes (≥95% match) and pass text readability.'
+    }
+  }
+
+  if (searchScope.includes('user') || searchScope.includes('patient') || searchScope.includes('customer') || searchScope.includes('nomenclature') || searchScope.includes('terminology') || issue.id === 'R2') {
+    return {
+      friendlyTitle: '⚠️ Healthcare Nomenclature ("User" vs "Patient")',
+      codeBadge: issue.id ? `Rule ${issue.id} · Healthcare Terms` : `Rule R2 · Healthcare Terms`,
+      categoryBadge: 'Brand Voice Policy',
+      plainSummary: 'Mandates referring to individuals as "patient", "customer", or "member" instead of tech term "user".'
+    }
+  }
+
+  if (searchScope.includes('discount') || searchScope.includes('off') || searchScope.includes('sale') || searchScope.includes('cap')) {
+    return {
+      friendlyTitle: '🏷️ Promotional Discount Cap Exceeded',
+      codeBadge: issue.id ? `Rule ${issue.id} · Pricing Policy` : `Rule R3 · Pricing Policy`,
+      categoryBadge: 'Commercial Pricing Policy',
+      plainSummary: 'Promotional discount exceeds maximum approved brand ceiling.'
+    }
+  }
+
+  if (searchScope.includes('financial') || searchScope.includes('double') || searchScope.includes('wealth') || searchScope.includes('rich') || searchScope.includes('quickcash')) {
+    return {
+      friendlyTitle: '💰 Unrealistic Financial Performance Claim',
+      codeBadge: issue.id ? `Rule ${issue.id} · SEC/FTC Standards` : `Rule R1 · SEC/FTC Standards`,
+      categoryBadge: 'Consumer Financial Protection',
+      plainSummary: 'Promising guaranteed financial returns or instant wealth is prohibited.'
+    }
+  }
+
+  if (searchScope.includes('risk') || searchScope.includes('safe')) {
+    return {
+      friendlyTitle: '🛡️ Concealed Financial Risk Disclosure',
+      codeBadge: issue.id ? `Rule ${issue.id} · Risk Disclosure` : `Rule R2 · Risk Disclosure`,
+      categoryBadge: 'Regulatory Risk Mandate',
+      plainSummary: 'All investments carry risk; claiming "zero risk" violates transparency guidelines.'
+    }
+  }
+
+  return {
+    friendlyTitle: issue.title || issue.type || `Brand Policy Guideline`,
+    codeBadge: issue.id ? `Rule ${issue.id}` : `Rule R${fallbackIdx + 1}`,
+    categoryBadge: 'Brand Governance',
+    plainSummary: issue.explanation || 'Draft content deviates from approved brand standards.'
   }
 }
 
@@ -2502,11 +2615,15 @@ export default function App() {
       if (q && matchedSubstrings.has(key)) return
       if (q) matchedSubstrings.add(key)
 
+      const friendlyInfo = getHumanFriendlyRule({ id: `R${issues.length + 1}`, title, type, quote: q, explanation }, issues.length)
       issues.push({
         id: `R${issues.length + 1}`,
+        friendlyTitle: friendlyInfo.friendlyTitle,
+        codeBadge: friendlyInfo.codeBadge,
+        categoryBadge: friendlyInfo.categoryBadge,
         severity,
-        title: title || type || 'Brand Policy Violation',
-        type: title || type || 'Brand Policy Violation',
+        title: friendlyInfo.friendlyTitle,
+        type: friendlyInfo.categoryBadge,
         quote: q,
         explanation,
         fix: fix || 'Revise draft to adhere to brand guidelines.',
@@ -4247,7 +4364,7 @@ export default function App() {
                   <div className="rule-bars">
                     <div className="bar-row">
                       <div>
-                        <span>R1 · Unsupported claims</span>
+                        <span>🚫 Medical Guarantee Prohibited (R1)</span>
                         <b>18</b>
                       </div>
                       <div className="bar">
@@ -4256,7 +4373,7 @@ export default function App() {
                     </div>
                     <div className="bar-row">
                       <div>
-                        <span>R2 · Approved terminology</span>
+                        <span>⚠️ Healthcare Nomenclature (R2)</span>
                         <b>11</b>
                       </div>
                       <div className="bar">
@@ -4265,7 +4382,7 @@ export default function App() {
                     </div>
                     <div className="bar-row">
                       <div>
-                        <span>R7 · Tone alignment</span>
+                        <span>✱ Missing Asterisk Disclaimer (R4)</span>
                         <b>07</b>
                       </div>
                       <div className="bar">
@@ -4663,7 +4780,7 @@ export default function App() {
                   <div className="rule-bars">
                     <div className="bar-row">
                       <div>
-                        <span>R1 · Medical &amp; Clinical Claims</span>
+                        <span>🚫 Medical Guarantee Prohibited (R1)</span>
                         <b>18</b>
                       </div>
                       <div className="bar">
@@ -4672,7 +4789,7 @@ export default function App() {
                     </div>
                     <div className="bar-row">
                       <div>
-                        <span>R2 · Approved Healthcare Terms</span>
+                        <span>⚠️ Healthcare Nomenclature (R2)</span>
                         <b>11</b>
                       </div>
                       <div className="bar">
@@ -4681,7 +4798,7 @@ export default function App() {
                     </div>
                     <div className="bar-row">
                       <div>
-                        <span>R7 · Tone of Voice Alignment</span>
+                        <span>✱ Missing Asterisk Disclaimer (R4)</span>
                         <b>07</b>
                       </div>
                       <div className="bar">
@@ -5707,19 +5824,35 @@ export default function App() {
                                   marginBottom: '14px'
                                 }}
                               >
-                                <h4
-                                  style={{
-                                    margin: 0,
-                                    fontSize: '13.5px',
-                                    fontWeight: '700',
-                                    color: '#f8fafc',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '6px'
-                                  }}
-                                >
-                                  Rule {idx + 1} – {issue.title || issue.type || `Brand Policy Violation`}
-                                </h4>
+                                {(() => {
+                                  const ruleInfo = getHumanFriendlyRule(issue, idx)
+                                  return (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                      <h4
+                                        style={{
+                                          margin: 0,
+                                          fontSize: '14px',
+                                          fontWeight: '700',
+                                          color: '#f8fafc',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          gap: '8px'
+                                        }}
+                                      >
+                                        {ruleInfo.friendlyTitle}
+                                      </h4>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <span style={{ fontSize: '10px', color: '#94a3b8', background: '#17242d', border: '1px solid #283e4a', padding: '1px 6px', borderRadius: '4px', fontFamily: 'ui-monospace, monospace', fontWeight: '600' }}>
+                                          {ruleInfo.codeBadge}
+                                        </span>
+                                        <span style={{ fontSize: '10px', color: '#64748b' }}>•</span>
+                                        <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '500' }}>
+                                          {ruleInfo.categoryBadge}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  )
+                                })()}
                                 <span
                                   style={{
                                     fontSize: '9.5px',
@@ -6911,52 +7044,76 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* CIELAB & WCAG Real-Time Analysis */}
+                    {/* Human-Friendly Brand Color & Readability Real-Time Analysis */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginTop: '14px' }}>
-                      <div style={{ background: '#111b24', border: '1px solid #263944', borderRadius: '8px', padding: '12px' }}>
-                        <span style={{ fontSize: '9px', color: '#71848e', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: '6px' }}>
-                          CIELAB COLOR DISTANCE
-                        </span>
+                      {/* Card 1: Brand Color Match */}
+                      <div style={{ background: '#111b24', border: `1px solid ${bannerMetrics.deltaEPass ? '#1d3a2d' : '#472224'}`, borderRadius: '8px', padding: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '9.5px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: '800' }}>
+                            🎨 BRAND COLOR MATCH
+                          </span>
+                          <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', background: bannerMetrics.deltaEPass ? 'rgba(186, 245, 127, 0.15)' : 'rgba(248, 113, 113, 0.15)', color: bannerMetrics.deltaEPass ? 'var(--mint)' : '#f87171', fontWeight: '800' }}>
+                            {bannerMetrics.deltaEPass ? 'PASS' : 'REJECT'}
+                          </span>
+                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                          <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: bannerBg, border: '1px solid #445967' }} />
-                          <strong style={{ fontSize: '14px', color: '#edf4f5', fontFamily: 'Manrope, sans-serif' }}>
-                            ΔE* = {bannerMetrics.deltaE}
+                          <div style={{ width: '20px', height: '20px', borderRadius: '4px', background: bannerBg, border: '1px solid #445967', flexShrink: 0 }} />
+                          <strong style={{ fontSize: '13.5px', color: bannerMetrics.deltaEPass ? '#baf57f' : '#ff9375', fontFamily: 'Manrope, sans-serif' }}>
+                            Color Match: {bannerMetrics.colorMatchPercent}%
                           </strong>
                         </div>
-                        <span style={{ fontSize: '10px', color: bannerMetrics.deltaEPass ? 'var(--mint)' : 'var(--coral)', fontWeight: '700' }}>
-                          {bannerMetrics.deltaEPass ? '✓ Within Tolerance (ΔE ≤ 12.0)' : '✕ Off-Brand Palette Alert'}
+                        <div style={{ fontSize: '11px', color: '#edf4f5', fontWeight: '700', marginBottom: '2px' }}>
+                          {bannerMetrics.colorMatchLabel}
+                        </div>
+                        <span style={{ fontSize: '9.5px', color: '#71848e', display: 'block' }}>
+                          CIELAB ΔE* = {bannerMetrics.deltaE} (CIE94 space)
                         </span>
                       </div>
 
-                      <div style={{ background: '#111b24', border: '1px solid #263944', borderRadius: '8px', padding: '12px' }}>
-                        <span style={{ fontSize: '9px', color: '#71848e', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: '6px' }}>
-                          WCAG 2.1 TEXT CONTRAST
-                        </span>
-                        <strong style={{ fontSize: '14px', color: '#edf4f5', fontFamily: 'Manrope, sans-serif', display: 'block', margin: '4px 0 4px' }}>
-                          {bannerMetrics.contrast}
+                      {/* Card 2: Readability & Contrast */}
+                      <div style={{ background: '#111b24', border: `1px solid ${bannerMetrics.contrastPass ? '#1d3a2d' : '#472224'}`, borderRadius: '8px', padding: '12px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                          <span style={{ fontSize: '9.5px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: '800' }}>
+                            👁️ TEXT READABILITY
+                          </span>
+                          <span style={{ fontSize: '9px', padding: '2px 6px', borderRadius: '4px', background: bannerMetrics.contrastPass ? 'rgba(186, 245, 127, 0.15)' : 'rgba(248, 113, 113, 0.15)', color: bannerMetrics.contrastPass ? 'var(--mint)' : '#f87171', fontWeight: '800' }}>
+                            {bannerMetrics.wcagLevel}
+                          </span>
+                        </div>
+                        <strong style={{ fontSize: '13.5px', color: bannerMetrics.contrastPass ? '#38bdf8' : '#f87171', fontFamily: 'Manrope, sans-serif', display: 'block', margin: '4px 0 2px' }}>
+                          Contrast: {bannerMetrics.contrast}
                         </strong>
-                        <span style={{ fontSize: '10px', color: bannerMetrics.contrastPass ? 'var(--mint)' : 'var(--coral)', fontWeight: '700' }}>
-                          {bannerMetrics.contrastPass ? `✓ Passed ${bannerMetrics.wcagLevel}` : `✕ ${bannerMetrics.wcagLevel}`}
+                        <div style={{ fontSize: '11px', color: '#edf4f5', fontWeight: '700', marginBottom: '2px' }}>
+                          {bannerMetrics.contrastLabel || (bannerMetrics.contrastPass ? 'Sharp Readability (Pass)' : 'Fails Contrast Standards')}
+                        </div>
+                        <span style={{ fontSize: '9.5px', color: '#71848e', display: 'block' }}>
+                          Standard: WCAG 2.1 AA (min 4.5:1 ratio)
                         </span>
                       </div>
 
+                      {/* Card 3: One-Click Palette Alignment */}
                       <div style={{ background: '#111b24', border: '1px solid #263944', borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                        <span style={{ fontSize: '9px', color: '#71848e', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block' }}>
-                          GOVERNANCE PALETTE FIX
-                        </span>
+                        <div>
+                          <span style={{ fontSize: '9.5px', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.6px', fontWeight: '800', display: 'block', marginBottom: '2px' }}>
+                            🛡️ 1-CLICK BRAND FIX
+                          </span>
+                          <span style={{ fontSize: '10px', color: '#71848e', display: 'block' }}>
+                            Snap banner to approved brand palette.
+                          </span>
+                        </div>
                         <button
                           type="button"
                           className="primary-button"
-                          style={{ padding: '6px 8px', fontSize: '10px', width: '100%', justifyContent: 'center' }}
+                          style={{ padding: '6px 8px', fontSize: '10px', width: '100%', justifyContent: 'center', marginTop: '6px' }}
                           onClick={() => {
                             setBannerBg('#001F3F')
                             setBannerUploadedImage(null)
                             const updatedIssues = issues.map((i) => (i.id === 'R3' ? { ...i, state: 'resolved' } : i))
                             setIssues(updatedIssues)
-                            triggerToast('Aligned banner to approved Brand Navy #001F3F! Rule R3 passed.')
+                            triggerToast('Aligned banner to Brand Navy #001F3F! Color match is now 99%.')
                           }}
                         >
-                          <Icon name="sparkle" size={13} /> Auto-Fix to Brand Navy
+                          <Icon name="sparkle" size={13} /> Auto-Fix to Brand Navy (99% Match)
                         </button>
                       </div>
                     </div>
@@ -7119,19 +7276,35 @@ export default function App() {
                             marginBottom: '14px'
                           }}
                         >
-                          <h4
-                            style={{
-                              margin: 0,
-                              fontSize: '13.5px',
-                              fontWeight: '700',
-                              color: '#f8fafc',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '6px'
-                            }}
-                          >
-                            Rule {idx + 1} – {issue.title || issue.type || `Brand Policy Violation`}
-                          </h4>
+                          {(() => {
+                            const ruleInfo = getHumanFriendlyRule(issue, idx)
+                            return (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                <h4
+                                  style={{
+                                    margin: 0,
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                    color: '#f8fafc',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px'
+                                  }}
+                                >
+                                  {ruleInfo.friendlyTitle}
+                                </h4>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <span style={{ fontSize: '10px', color: '#94a3b8', background: '#17242d', border: '1px solid #283e4a', padding: '1px 6px', borderRadius: '4px', fontFamily: 'ui-monospace, monospace', fontWeight: '600' }}>
+                                    {ruleInfo.codeBadge}
+                                  </span>
+                                  <span style={{ fontSize: '10px', color: '#64748b' }}>•</span>
+                                  <span style={{ fontSize: '10px', color: '#64748b', fontWeight: '500' }}>
+                                    {ruleInfo.categoryBadge}
+                                  </span>
+                                </div>
+                              </div>
+                            )
+                          })()}
                           <span
                             style={{
                               fontSize: '9.5px',
@@ -7580,7 +7753,7 @@ export default function App() {
                 <div className="rule-bars">
                   <div className="bar-row">
                     <div>
-                      <span>R1 · Unsupported claims</span>
+                      <span>🚫 Medical Guarantee Prohibited (R1)</span>
                       <b>18</b>
                     </div>
                     <div className="bar">
@@ -7589,7 +7762,7 @@ export default function App() {
                   </div>
                   <div className="bar-row">
                     <div>
-                      <span>R2 · Approved terminology</span>
+                      <span>⚠️ Healthcare Nomenclature (R2)</span>
                       <b>11</b>
                     </div>
                     <div className="bar">
@@ -7598,7 +7771,7 @@ export default function App() {
                   </div>
                   <div className="bar-row">
                     <div>
-                      <span>R7 · Tone alignment</span>
+                      <span>✱ Missing Asterisk Disclaimer (R4)</span>
                       <b>07</b>
                     </div>
                     <div className="bar">
@@ -8411,7 +8584,7 @@ export default function App() {
                 <div className="rule-bars" style={{ padding: 0 }}>
                   <div className="bar-row">
                     <div>
-                      <span>R1 · Tone & Claims (Absolute Guarantees)</span>
+                      <span>🚫 Medical Guarantee Prohibited (R1 · 100% Cures)</span>
                       <b>42% (58 flags)</b>
                     </div>
                     <div className="bar">
@@ -8420,7 +8593,7 @@ export default function App() {
                   </div>
                   <div className="bar-row">
                     <div>
-                      <span>R4 · Pricing & Fee Disclaimer Asterisk</span>
+                      <span>✱ Missing Asterisk Disclaimer (R4 · Zero-Fee Offers)</span>
                       <b>26% (36 flags)</b>
                     </div>
                     <div className="bar">
@@ -8429,7 +8602,7 @@ export default function App() {
                   </div>
                   <div className="bar-row">
                     <div>
-                      <span>R2 · Patient-Centric Terminology</span>
+                      <span>⚠️ Healthcare Nomenclature (R2 · "User" vs "Patient")</span>
                       <b>19% (26 flags)</b>
                     </div>
                     <div className="bar">
@@ -8438,7 +8611,7 @@ export default function App() {
                   </div>
                   <div className="bar-row">
                     <div>
-                      <span>R3 · Palette Delta & Contrast</span>
+                      <span>🎨 Brand Color Match & Contrast (R3 · Palette Drift)</span>
                       <b>13% (18 flags)</b>
                     </div>
                     <div className="bar">
